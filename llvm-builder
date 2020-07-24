@@ -13,18 +13,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# Author : zhongxiao.yzx@gmail.com
-# Date   : 2020-07-01
-#
-###########################################################################
+
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 ROOT_DIR=`pwd`
-INSTALL_ROOT=${ROOT_DIR}/release
+if [ -z $1 ];then
+    echo ""
+    read -p "use default work directory : ${ROOT_DIR} [y/n]" options
+    if [ x$options != x'y' ];then
+        exit
+    fi
+else
+    ROOT_DIR=$1
+fi
+
 ENABLE_NINJA=false # false
-Build_Type=Debug
+BUILD_TYPE=Debug
 BUILD_FORCE=false
 
 function usage() {
@@ -46,10 +51,10 @@ function options_parse() {
                 ENABLE_NINJA=true
                 ;;
             -d|--debug)
-                Build_Type=Debug
+                BUILD_TYPE=Debug
                 ;;
             -r|--release)
-                Build_Type=Release
+                BUILD_TYPE=Release
                 ;;
             -f|--force)
                 BUILD_FORCE=true
@@ -72,34 +77,33 @@ function options_parse() {
 echo $0 $@
 options_parse $@
 
-echo "SCRIPT_DIR   : ${SCRIPT_DIR}"
-echo "ROOT_DIR     : ${ROOT_DIR}"
-echo "INSTALL_ROOT : ${INSTALL_ROOT}"
-echo "ENABLE_NINJA : ${ENABLE_NINJA}"
-echo "current dir : `pwd`"
-
-# ------------- build llvm-project -------------- #"
+INSTALL_ROOT=${ROOT_DIR}/llvm-release
 LLVM_SRC_ROOT=${ROOT_DIR}/llvm-project
 LLVM_OBJ_ROOT=${ROOT_DIR}/llvm-build
 if [ ! -d ${LLVM_OBJ_ROOT} ];then
     mkdir -p ${LLVM_OBJ_ROOT}
 fi
-if [ ! -d ${INSTALL_ROOT} ];then
-    mkdir -p ${INSTALL_ROOT}
-fi
 
+echo "SCRIPT_DIR   : ${SCRIPT_DIR}"
+echo "ROOT_DIR     : ${ROOT_DIR}"
+echo "SRC_DIR      : ${LLVM_SRC_ROOT}"
+echo "INSTALL_ROOT : ${INSTALL_ROOT}"
+echo "ENABLE_NINJA : ${ENABLE_NINJA}"
+echo "current dir  : `pwd`"
+
+# ------------- build llvm-project -------------- #"
 LLVM_BUILD_ARGS="\
     -DCMAKE_INSTALL_PREFIX=${INSTALL_ROOT} \
     -DCMAKE_PREFIX_PATH=${INSTALL_ROOT} \
-    -DCMAKE_BUILD_TYPE=${Build_Type} \
+    -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
     -DLLVM_ENABLE_PROJECTS=clang;clang-tools-extra;compiler-rt;libcxx;libcxxabi;libunwind;lld;lldb;"
 
-cmake_exe="cmake"
-make_exe="make"
+cmake_exe=cmake
+make_exe=make
 command -v ninja >/dev/null 2>&1 && ${ENABLE_NINJA} && {
     echo >&2 "try to build with ninja!"
     cmake_exe="cmake -G Ninja"
-    make_exe="ninja"
+    make_exe=ninja
     # LLVM_OBJ_ROOT=${LLVM_OBJ_ROOT}/ninja
     if [ ! -d ${LLVM_OBJ_ROOT} ];then
         mkdir -p ${LLVM_OBJ_ROOT}
@@ -119,6 +123,8 @@ fi
 set -x
 # sleep 5
 ${cmake_exe} ${LLVM_BUILD_ARGS} ${LLVM_SRC_ROOT}/llvm
-${make_exe} -j4
+${make_exe} -j64
 ${make_exe} install
 
+echo "~_~"
+echo "llvm building complete ..."

@@ -1,10 +1,10 @@
 # General environment variables
-gcc_version=gcc-9.3.0
-export PATH=/usr/local/${gcc_version}/bin${PATH:+:${PATH}}
-export MANPATH=/usr/local/${gcc_version}/share/man:${MANPATH}
-export INFOPATH=/usr/local/${gcc_version}/share/info${INFOPATH:+:${INFOPATH}}
-export LD_LIBRARY_PATH=/usr/local/${gcc_version}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-export LD_LIBRARY_PATH=/usr/local/${gcc_version}/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+GCC_RELEASE=${GCC_RELEASE_HOME}
+export PATH=${GCC_RELEASE}/bin${PATH:+:${PATH}}
+export MANPATH=${GCC_RELEASE}/share/man:${MANPATH}
+export INFOPATH=${GCC_RELEASE}/share/info${INFOPATH:+:${INFOPATH}}
+export LD_LIBRARY_PATH=${GCC_RELEASE}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+export LD_LIBRARY_PATH=${GCC_RELEASE}/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 
 
 # # General environment variable

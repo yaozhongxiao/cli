@@ -17,53 +17,33 @@
 
 set -e
 SCRIPT_DIR=$(cd $(dirname $0); pwd -P)
-GCC_CLEAN=false
-
-GCC_VERSION=gcc-9.3.0
-GCC_INSTALL_PREFIX=/usr/local/${GCC_VERSION}
-GCC_REPO=https://github.com/gcc-mirror/gcc/archive/releases/gcc-9.3.0.tar.gz
-
-if [ x"$(uname)" == x"Darwin" ];then
-    echo "\nplease use the Linux system and try again!\n"
-    exit -1
-elif [ x"$(expr substr $(uname -s) 1 5)" == x"Linux" ];then
-    echo "try to build and install ${GCC_VERSION}!"
-elif [ x"$(expr substr $(uname -s) 1 10)" == x"MINGW32_NT" ];then
-    echo "\nplease use the Linux system and try again!\n"
-    exit -1
-fi
-
-BUILD_FORCE=true
-if [ xtrue != x$BUILD_FORCE ];then
-    read -p "try to build ${GCC_VERSION}[y/n]" option
-fi
-
-# 1. download sources
-if [ x${GCC_CLEAN} == xtrue ];then
-    echo "${GCC_VERSION} downloading ..."
-    wget ${GCC_REPO}
-    if [ -d ${GCC_VERSION} ]; then
-       rm -rf ${GCC_VERSION}
+ROOT_DIR=`pwd`
+if [ -z $1 ];then
+    echo ""
+    read -p "use default work directory : ${ROOT_DIR} [y/n]" options
+    if [ x$options != x'y' ];then
+        exit
     fi
-    mkdir ${GCC_VERSION}
-    tar -xzvf ${GCC_VERSION}.tar.gz --strip-components 1 -C ${GCC_VERSION}
+else
+    ROOT_DIR=$1
 fi
-cd ${GCC_VERSION}
 
 function install_prerequisition() {
     # install prerequisition utils
-    yum install -y lbzip2 flex flex-devel file
+    sudo yum install -y lbzip2 flex flex-devel file -b current
 
     local option=$1
     echo "download_prerequisition $@"
     case $option in
         1)  echo "install from the gcc sources"
+            cd ${GCC_SRC_ROOT}
             base_url_mirror=http://ftp.tsukuba.wide.ad.jp/software/gcc/infrastructure
             sed -i -e "/^base_url=/a\
                 base_url='${base_url_mirror}'" -e "s/^base_url=/#&/" ./contrib/download_prerequisites
             sh ./contrib/download_prerequisites
             ;;
         2)  echo 'install from http://ftp.tsukuba.wide.ad.jp/software/gcc/infrastructure'
+            cd ${GCC_SRC_ROOT}
             # install from sources
             if [ -f gmp-6.1.0.tar.bz2 -a -f mpfr-3.1.4.tar.bz2 -a -f mpc-1.0.3.tar.gz -f isl-0.18.tar.bz2];then
                 return;
@@ -75,32 +55,48 @@ function install_prerequisition() {
             wget ${base_url}/isl-0.18.tar.bz2
             ;;
         3)  echo 'install with yum installer'
-            yum install -y gmp gmp-devel mpfr mpfr-devel libmpc libmpc-devel -b current
+            sudo yum install -y gmp gmp-devel mpfr mpfr-devel libmpc libmpc-devel -b current
             ;;
         *)  echo 'download nothing for prerequisition'
             ;;
     esac
 }
-# 2. download prerequisition
-echo "${GCC_VERSION} prerequisites downloading ..."
-install_prerequisition 1
+
+INSTALL_ROOT=${ROOT_DIR}/gcc-release
+GCC_SRC_ROOT=${ROOT_DIR}/gcc-project
+GCC_OBJ_ROOT=${ROOT_DIR}/gcc-build
+if [ ! -d ${GCC_OBJ_ROOT} ];then
+    mkdir -p ${GCC_OBJ_ROOT}
+fi
+GCC_INSTALL_PREFIX=${INSTALL_ROOT}
 
 set -x
-# 3. config
-echo "${GCC_VERSION} config ..."
-if [ ! -d ${GCC_VERSION}-build ];then
-    mkdir -p ${GCC_VERSION}-build
+# 1. download prerequisition
+if [ ! -d ${GCC_INSTALL_PREFIX} ];then
+    echo "gcc building prerequisites downloading ..."
+    install_prerequisition 3
 fi
-cd ${GCC_VERSION}-build
-../configure --prefix=${GCC_INSTALL_PREFIX} -enable-checking=release -enable-languages=c,c++ -disable-multilib
 
-echo "${GCC_VERSION} building ..."
-make -j4
+# 2. config
+cd ${GCC_OBJ_ROOT}
+# rebuild will failed bcz of the CC has changed previous run
+# by bootstrap, we need to clean the previous config beforehand!
+if [ -f ${GCC_OBJ_ROOT}/gcc/config.cache ];then
+    make distclean
+fi
+${GCC_SRC_ROOT}/configure --prefix=${GCC_INSTALL_PREFIX} -enable-checking=release -enable-languages=c,c++ -disable-multilib
+set +x
 
-echo "${GCC_VERSION} installing ..."
+echo "${GCC_SRC_ROOT} building ..."
+make -j64
+
+echo "${GCC_SRC_ROOT} installing ..."
 make install
 
 # 4. config the gcc and libstdc++.* to available
 cp -rf ${SCRIPT_DIR}/gcc-enable ${GCC_INSTALL_PREFIX}/gcc-enable
-echo "source ${GCC_INSTALL_PREFIX}/gcc-enable" >> ~/.bashrc
+sed -i "s:\(GCC_RELEASE=\).*:\1${GCC_INSTALL_PREFIX}:g" ${GCC_INSTALL_PREFIX}/gcc-enable
+# echo "source ${GCC_INSTALL_PREFIX}/gcc-enable" >> ~/.bashrc
 
+echo "~_~"
+echo "gcc building complete ..."

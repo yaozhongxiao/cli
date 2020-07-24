@@ -18,7 +18,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 WORK_DIR=`pwd`
-LLVM_PROJECT=llvm-project
+GCC_PROJECT=gcc-project
 
 if [ -z $1 ];then
     echo ""
@@ -30,23 +30,22 @@ else
     WORK_DIR=$1
 fi
 
-# LLVM_REPO="git@github.com:llvm/llvm-project.git"
-# upstream syncing is slow, use the inner mirror
-LLVM_REPO="git@gitlab.alibaba-inc.com:zhongxiao.yzx/llvm-project.git"
-LLVM_PROJ_NAME=${LLVM_REPO##*/}
-LLVM_PROJ_NAME=${LLVM_PROJ_NAME%\.*}
+#GCC_REPO="git@github.com:gcc-mirror/gcc.git"
+GCC_REPO=git@gitlab.alibaba-inc.com:zhongxiao.yzx/gcc-project.git
+GCC_PROJ_NAME=${GCC_REPO##*/}
+GCC_PROJ_NAME=${GCC_PROJ_NAME%\.*}
 
-LLVM_DIR=${WORK_DIR}/${LLVM_PROJECT}
+GCC_DIR=${WORK_DIR}/${GCC_PROJECT}
 
 echo "try to sync projects :"
-echo "LLVM_REPO    : ${LLVM_REPO}"
-echo "LLVM_DIR     : ${LLVM_DIR}"
+echo "GCC_REPO    : ${GCC_REPO}"
+echo "GCC_DIR     : ${GCC_DIR}"
 
 set -x
-if [ ! -d ${LLVM_DIR} ];then
-    git clone ${LLVM_REPO} ${LLVM_DIR} --recursive --progress
+if [ ! -d ${GCC_DIR} ];then
+    git clone ${GCC_REPO} ${GCC_DIR} --recursive --progress
 else
-    cd ${LLVM_DIR}
+    cd ${GCC_DIR}
     git pull origin master
     git submodule sync --recursive
     git submodule update --recursive
