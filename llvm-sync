@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+#
+# Copyright 2020 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Author : zhongxiao.yzx@gmail.com
+# Date   : 2020-07-16
+#
+###########################################################################
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
+WORK_DIR=`pwd`/../
+
+echo "try to reset llvm project git repo ..."
+LLVM_REPO="git@github.com:llvm/llvm-project.git"
+LLVM_PROJ_NAME=${LLVM_REPO##*/}
+LLVM_PROJ_NAME=${LLVM_PROJ_NAME%\.*}
+
+LLVM_DIR=${WORK_DIR}/${LLVM_PROJ_NAME}
+
+echo "try to sync projects :"
+echo "LLVM_REPO    : ${LLVM_REPO}"
+echo "LLVM_DIR     : ${LLVM_DIR}"
+
+if [ ! -d ${LLVM_DIR} ];then
+    echo "git clone ${LLVM_REPO} --recursive --progress"
+    git clone ${LLVM_REPO} --recursive --progress
+    cp -rf ${SCRIPT_DIR}/llvm-builder ${LLVM_DIR}/llvm-builder
+    chmod +x ${LLVM_DIR}/llvm-builder
+fi
+
