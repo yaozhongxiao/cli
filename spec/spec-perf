@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+#
+# Copyright 2020 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
+echo ""
+echo "---------------------------------------------------------"
+echo "example :"
+echo "    spec-perf ./cpugcc_r_base.mytest-m64 gcc-pp.c -O3 -o out"
+echo "---------------------------------------------------------"
+echo ""
+
+PERF_STAT_EVENTS="branch-misses,\
+bus-cycles,\
+cache-misses,\
+cache-references,\
+cpu-cycles,\
+instructions,\
+stalled-cycles-backend,\
+stalled-cycles-frontend,\
+alignment-faults,\
+context-switches,\
+cpu-clock,\
+cpu-migrations,\
+page-faults,\
+task-clock,\
+L1-dcache-load-misses,\
+L1-dcache-loads,\
+L1-dcache-store-misses,\
+L1-dcache-stores,\
+L1-icache-load-misses,\
+L1-icache-loads,\
+branch-load-misses,\
+branch-loads,\
+dTLB-load-misses,\
+dTLB-loads,\
+iTLB-load-misses,\
+iTLB-loads"
+
+# The bin to be tested
+PERF_CMD=$@
+TARGET=$1
+if [ ! -f ${TARGET} ];then
+    echo "${TARGET} do not exist!"
+    exit -1
+fi
+TARGET=${TARGET##*/}
+
+set -x
+# 1. perf stat first
+perf stat -B -v -o ${TARGET}.perf -e ${PERF_STAT_EVENTS} ${PERF_CMD}
+
+# perf stat ${PERF_CMD}
+
+# 2. perf record
+
+# 3. perf report
+
+# 4. perf anotate
+

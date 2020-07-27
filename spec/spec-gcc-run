@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+#
+# Copyright 2020 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
+
+# TODO() : try to reset the compiler and spec root by users
+GCC_COMPILER=/cpp/zhongxiao.yzx/compiler/gcc-release
+SPEC_ROOT=/cpp/zhongxiao.yzx/speccpu2017
+
+ACTION_FORCE=false
+# COMMANDS=(500.perlbench_r 502.gcc_r) # default command
+COMMANDS=(502.gcc_r) # default command
+
+function usage() {
+    cat << EOF
+    Usage: $0 [options]
+    Options:
+        -h|--help         This Message.
+        --gcc            Set The GCC Compiler Root Directory.
+        --spec            Set The Spec Testing Root Directory
+        -f|--force        Force Run.
+EOF
+}
+
+function options_parse() {
+    while test $# -gt 0; do
+        case "$1" in
+            --gcc)
+                shift
+                if [ x"$1" != x"-*" ];then
+                    GCC_COMPILER=$1
+                fi
+                ;;
+            --spec)
+                shift
+                if [ x"$1" != x"-*" ];then
+                    SPEC_ROOT=$1
+                fi
+                ;;
+            -f|--force)
+                ACTION_FORCE=true
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            -*)
+                echo "Unknown option \"$1\"." >&2
+                usage
+                exit 1
+                ;;
+            *)
+                COMMANDS+=($1)
+                ;;
+        esac
+        shift
+    done
+}
+
+# options parsing
+echo $0 $@
+options_parse $@
+
+WORK_DIR=${SPEC_ROOT}
+if [ ! -f ${WORK_DIR}/cli_run.sh ];then
+    echo "can not find cli_run.sh in workspace [${WORK_DIR}]!"
+    usage
+    exit -1
+fi
+
+read -p "please confirm your compiler : ${GCC_COMPILER} [y/n]" options
+if [ x$options != x'y' ];then
+    exit -1
+fi
+
+set -x
+# run test cases
+cd ${WORK_DIR}
+echo `pwd`
+sh cli_run.sh --cc gcc --cc-root ${GCC_COMPILER} ${COMMANDS[@]}
+
+
+# **DO NOT** need to backup benchspec, bcz,
+# the output is configured in *.cfg so that
+# "llvm --- *_mytest-m64"
+# "gcc  --- *_mytest-64"
+#
+# BENCHSPEC=benchspec
+# BENCHSPEC_GCC=benchspec-gcc
+# if [ -d ${BENCHSPEC_GCC} ];then
+#     rm -rf ${BENCHSPEC_GCC}
+# fi
+# cp -r ${BENCHSPEC} ${BENCHSPEC_GCC}
+
+# save the test result
+BENCHSPEC_RESULT=result
+BENCHSPEC_RESULT_GCC=result-gcc
+if [ -d ${BENCHSPEC_RESULT_GCC} ];then
+    rm -rf ${BENCHSPEC_RESULT_GCC}
+fi
+cp -r ${BENCHSPEC_RESULT} ${BENCHSPEC_RESULT_GCC}
