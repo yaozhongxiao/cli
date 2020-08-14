@@ -18,7 +18,7 @@ set -e
 echo '' >> ~/.bashrc
 echo '#-------------------  cli config ----------------- #' >> ~/.bashrc
 echo 'CLI_ROOT=/home/zhongxiao.yzx/workspace/cli' >> ~/.bashrc
-echo 'PATH=${CLI_ROOT}:${CLI_ROOT}/compiler:${CLI_ROOT}/performance:${CLI_ROOT}/spec:${PATH}' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}:${CLI_ROOT}/compiler:${CLI_ROOT}/performance:${CLI_ROOT}/spec:${CLI_ROOT}/r2:${PATH}' >> ~/.bashrc
 echo '' >> ~/.bashrc
 
 echo "install complete ! ..."
