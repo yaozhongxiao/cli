@@ -96,6 +96,7 @@ LLVM_BUILD_ARGS="\
     -DCMAKE_INSTALL_PREFIX=${INSTALL_ROOT} \
     -DCMAKE_PREFIX_PATH=${INSTALL_ROOT} \
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+    -DLLVM_ENABLE_DUMP=ON \
     -DLLVM_ENABLE_PROJECTS=clang;clang-tools-extra;compiler-rt;libcxx;libcxxabi;libunwind;lld;lldb;"
 
 cmake_exe=cmake
