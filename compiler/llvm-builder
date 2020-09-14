@@ -18,15 +18,6 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 ROOT_DIR=`pwd`
-if [ -z $1 ];then
-    echo ""
-    read -p "use default work directory : ${ROOT_DIR} [y/n]" options
-    if [ x$options != x'y' ];then
-        exit
-    fi
-else
-    ROOT_DIR=$1
-fi
 
 ENABLE_NINJA=false # false
 BUILD_TYPE=Debug
@@ -39,6 +30,7 @@ function usage() {
     -h|--help         This Message.
     -f|--force        Force Building.
     --ninja           Build With ninja (default is makefile)
+    --root            Build Project in root directiry
     -d|--debug        Build With Debug Mode (default)
     -r|--release      Build With Release Mode
 EOF
@@ -47,6 +39,12 @@ EOF
 function options_parse() {
     while test $# -gt 0; do
         case "$1" in
+            --root)
+              shift
+              if [ x"$1" != x"-*" ];then
+                ROOT_DIR=$1
+              fi
+              ;;
             --ninja)
                 ENABLE_NINJA=true
                 ;;
@@ -115,7 +113,7 @@ cd $LLVM_OBJ_ROOT
 echo "$cmake_exe ${LLVM_BUILD_ARGS} ${LLVM_SRC_ROOT}/llvm"
 if [ x"false" == x"${BUILD_FORCE}" ];then
     echo ""
-    read -p "try to build the llvm projects ... [y/n]" option
+    read -p "try to build the llvm projects in ${ROOT_DIR} ... [y/n]" option
     if [ x"y" != x${option} ];then
         exit 0
     fi
