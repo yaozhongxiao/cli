@@ -81,6 +81,9 @@ LLVM_OBJ_ROOT=${ROOT_DIR}/llvm-build
 if [ ! -d ${LLVM_OBJ_ROOT} ];then
     mkdir -p ${LLVM_OBJ_ROOT}
 fi
+if [ ! -d ${LLVM_SRC_ROOT} ];then
+   LLVM_SRC_ROOT=${ROOT_DIR}
+fi
 
 echo "SCRIPT_DIR   : ${SCRIPT_DIR}"
 echo "ROOT_DIR     : ${ROOT_DIR}"
