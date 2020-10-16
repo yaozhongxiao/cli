@@ -23,9 +23,17 @@ LLVM_COMPILER=/cpp/zhongxiao.yzx/compiler/llvm-release
 SPEC_ROOT=/cpp/zhongxiao.yzx/speccpu2017
 
 ACTION_FORCE=false
+
 # default command
-# COMMANDS=(500.perlbench_r 502.gcc_r)
-COMMANDS=(502.gcc_r)
+OPT_ITERATIONS=1
+# COMMANDS=(541.leela_r)
+# COMMANDS=(531.deepsjeng_r)
+# COMMANDS=(502.gcc_r)
+# COMMANDS=(intspeed)
+# COMMANDS=(intrate)
+# COMMANDS=(523.xalancbmk_r)
+
+COMMANDS=(intrate)
 
 function usage() {
     cat << EOF
@@ -35,6 +43,7 @@ function usage() {
         --llvm            Set The LLVM Compiler Root Directory.
         --spec            Set The Spec Testing Root Directory
         -f|--force        Force Run.
+        -i|--iterations   Set The Spec Testing Iterations
 EOF
 }
 
@@ -45,6 +54,12 @@ function options_parse() {
                 shift
                 if [ x"$1" != x"-*" ];then
                     LLVM_COMPILER=$1
+                fi
+                ;;
+            -i|--iterations)
+                shift
+                if [ x"$1" != x"-*" ];then
+                    OPT_ITERATIONS=$1
                 fi
                 ;;
             --spec)
@@ -93,7 +108,7 @@ set -x
 # run test cases
 cd ${WORK_DIR}
 echo `pwd`
-sh cli_run.sh --cc llvm --cc-root ${LLVM_COMPILER} ${COMMANDS[@]}
+sh cli_run.sh --cc llvm --cc-root ${LLVM_COMPILER} "--iterations=${OPT_ITERATIONS}" ${COMMANDS[@]}
 
 # **DO NOT** need to backup benchspec, bcz,
 # the output is configured in *.cfg so that

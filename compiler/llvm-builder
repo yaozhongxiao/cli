@@ -75,6 +75,18 @@ function options_parse() {
 echo $0 $@
 options_parse $@
 
+if [ x"false" == x"${BUILD_FORCE}" ];then
+if [ -z $1 ];then
+    echo ""
+    read -p "use default work directory : ${ROOT_DIR} [y/n]" options
+    if [ x$options != x'y' ];then
+        exit
+    fi
+else
+    ROOT_DIR=$1
+fi
+fi
+
 INSTALL_ROOT=${ROOT_DIR}/llvm-release
 LLVM_SRC_ROOT=${ROOT_DIR}/llvm-project
 LLVM_OBJ_ROOT=${ROOT_DIR}/llvm-build

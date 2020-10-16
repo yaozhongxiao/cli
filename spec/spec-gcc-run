@@ -23,8 +23,8 @@ GCC_COMPILER=/cpp/zhongxiao.yzx/compiler/gcc-release
 SPEC_ROOT=/cpp/zhongxiao.yzx/speccpu2017
 
 ACTION_FORCE=false
-# COMMANDS=(500.perlbench_r 502.gcc_r) # default command
-COMMANDS=(502.gcc_r) # default command
+COMMANDS=(541.leela_r) # default command
+# COMMANDS=(502.gcc_r) # default command
 
 function usage() {
     cat << EOF
