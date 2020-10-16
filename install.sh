@@ -15,10 +15,10 @@
 # limitations under the License.
 
 set -e
-echo '' >> ~/.bashrc
-echo '#-------------------  cli config ----------------- #' >> ~/.bashrc
+sed -i "/cli config begin/,/cli config end./ d" ~/.bashrc
+echo '#-------------------  cli config begin ----------------#' >> ~/.bashrc
 echo 'CLI_ROOT=/home/zhongxiao.yzx/workspace/cli' >> ~/.bashrc
-echo 'PATH=${CLI_ROOT}:${CLI_ROOT}/compiler:${CLI_ROOT}/performance:${CLI_ROOT}/spec:${CLI_ROOT}/r2:${PATH}' >> ~/.bashrc
-echo '' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}:${CLI_ROOT}/compiler:${CLI_ROOT}/performance:${CLI_ROOT}/spec:${CLI_ROOT}/r2:${CLI_ROOT}/rpc:${PATH}' >> ~/.bashrc
+echo '#-------------------  cli config end ------------------#' >> ~/.bashrc
 
 echo "install complete ! ..."
