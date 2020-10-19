@@ -20,7 +20,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 
 # TODO() : try to reset the compiler and spec root by users
 LLVM_COMPILER=/cpp/zhongxiao.yzx/compiler/llvm-release
-SPEC_ROOT=/cpp/zhongxiao.yzx/speccpu2017
+SPEC_ROOT="$(readlink -f $(pwd))"
 
 ACTION_FORCE=false
 

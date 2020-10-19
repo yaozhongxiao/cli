@@ -82,8 +82,6 @@ if [ -z $1 ];then
     if [ x$options != x'y' ];then
         exit
     fi
-else
-    ROOT_DIR=$1
 fi
 fi
 

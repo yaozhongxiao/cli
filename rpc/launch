@@ -41,6 +41,7 @@ function usage() {
         -h|--host      Set the remote server ip or hostname.
         -u|--user      Set the User to launch in remote server.
         -a|--anchor    Set the bastion to launch remote server
+        --bastion      Set the bastion as the target remote server.
 EOF
 }
 

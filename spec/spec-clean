@@ -17,7 +17,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
-SPEC_ROOT=/cpp/zhongxiao.yzx/speccpu2017
+SPEC_ROOT="$(readlink -f $(pwd))"
 
 function usage() {
     cat << EOF
@@ -56,9 +56,8 @@ echo $0 $@
 options_parse $@
 
 WORK_DIR=${SPEC_ROOT}
-set -x
 if [ ! -f ${WORK_DIR}/cli_run.sh ];then
-    echo "invalid command options !"
+    echo "can not find spec root, please make sure to set the spec testing!"
     usage
     exit -1
 fi
