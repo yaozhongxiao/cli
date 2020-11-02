@@ -18,6 +18,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 ROOT_DIR=`pwd`
+LLVM_PRO="llvm-project"
 
 ENABLE_NINJA=false # false
 BUILD_TYPE=Debug
@@ -31,6 +32,7 @@ function usage() {
     -f|--force        Force Building.
     --ninja           Build With ninja (default is makefile)
     --root            Build Project in root directiry
+    --llvm            LLVM Project to be built
     -d|--debug        Build With Debug Mode (default)
     -r|--release      Build With Release Mode
 EOF
@@ -39,6 +41,12 @@ EOF
 function options_parse() {
     while test $# -gt 0; do
         case "$1" in
+            --llvm)
+              shift
+              if [ x"$1" != x"-*" ];then
+                LLVM_PRO=$1
+              fi
+              ;;
             --root)
               shift
               if [ x"$1" != x"-*" ];then
@@ -86,7 +94,7 @@ fi
 fi
 
 INSTALL_ROOT=${ROOT_DIR}/llvm-release
-LLVM_SRC_ROOT=${ROOT_DIR}/llvm-project
+LLVM_SRC_ROOT=${ROOT_DIR}/${LLVM_PRO}
 LLVM_OBJ_ROOT=${ROOT_DIR}/llvm-build
 if [ ! -d ${LLVM_OBJ_ROOT} ];then
     mkdir -p ${LLVM_OBJ_ROOT}
