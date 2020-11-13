@@ -1,0 +1,37 @@
+#!/usr/bin/bash
+#
+# Copyright 2020 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+repo="origin"
+MERGE_ID=$1
+FORCE=true
+
+if [ x${FORCE} != x'true' ];then
+read -p "please confirm your merge-request id: ${MERGE_ID} [y/n]" options
+if [ x$options != x'y' ];then
+    exit
+fi
+fi
+
+set -ex
+
+#git fetch --no-tags --progress -- ${repo} refs/heads/*:refs/remotes/origin/*
+#git config --local remote.origin.url ${repo}
+#git config --local remote.origin.fetch +refs/merge-requests/${MERGE_ID}/head:refs/remotes/origin/PR-${MERGE_ID}
+#git fetch --verbose --prune origin
+
+git fetch --verbose --prune --no-tags --progress ${repo} +refs/merge-requests/${MERGE_ID}/head:refs/remotes/origin/PR-${MERGE_ID}
+git checkout remotes/origin/PR-${MERGE_ID}
+
