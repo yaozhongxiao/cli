@@ -124,7 +124,7 @@ sh cli_run.sh --cc llvm --cc-root ${LLVM_COMPILER} "--iterations=${OPT_ITERATION
 
 # save the test result
 BENCHSPEC_RESULT=result
-BENCHSPEC_RESULT_LLVM=result-llvm
+BENCHSPEC_RESULT_LLVM=result-llvm-$(date +%Y%m%d-%H%M%S)
 if [ -d ${BENCHSPEC_RESULT_LLVM} ];then
     rm -rf ${BENCHSPEC_RESULT_LLVM}
 fi

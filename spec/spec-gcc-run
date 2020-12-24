@@ -109,7 +109,7 @@ sh cli_run.sh --cc gcc --cc-root ${GCC_COMPILER} ${COMMANDS[@]}
 
 # save the test result
 BENCHSPEC_RESULT=result
-BENCHSPEC_RESULT_GCC=result-gcc
+BENCHSPEC_RESULT_GCC=result-gcc-$(date +%Y%m%d-%H%M%S)
 if [ -d ${BENCHSPEC_RESULT_GCC} ];then
     rm -rf ${BENCHSPEC_RESULT_GCC}
 fi
