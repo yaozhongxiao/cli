@@ -20,6 +20,7 @@ sed -i "/cli config begin/,/cli config end./ d" ~/.bashrc
 echo '#-------------------  cli config begin ----------------#' >> ~/.bashrc
 echo "CLI_ROOT=${SCRIPT_DIR}" >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}:${CLI_ROOT}/compiler:${CLI_ROOT}/performance:${CLI_ROOT}/spec:${CLI_ROOT}/r2:${CLI_ROOT}/rpc:${CLI_ROOT}/git:${PATH}' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}/armie:${PATH}' >> ~/.bashrc
 echo '#-------------------  cli config end ------------------#' >> ~/.bashrc
 
 echo "install complete ! ..."
