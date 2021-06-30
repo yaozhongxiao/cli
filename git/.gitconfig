@@ -1,0 +1,26 @@
+[user]
+    name = yaozhongxiao
+    #email = yaozhongxiao@bytedance.com
+    email = zhongxiao.yzx@gmail.com
+
+[color]
+    ui = auto
+
+[core]
+    editor = vim
+
+[include]
+    #path = ~/Workspace/DevTools/cli/git/.gitconfig
+
+[merge]
+    tool = vimdiff
+
+[diff]
+    tool = vimdiff
+
+
+[commit]
+    template = /Users/zhongxiao.yzx/.git-commit-template
+
+[alias]
+    logx = log --all --pretty=fuller --graph
