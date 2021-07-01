@@ -20,7 +20,7 @@
 
 
 [commit]
-    template = /Users/zhongxiao.yzx/.git-commit-template
+    template = ~/.git-commit-template
 
 [alias]
     logx = log --all --pretty=fuller --graph

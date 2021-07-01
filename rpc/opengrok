@@ -70,12 +70,19 @@ function options_parse() {
     done
 }
 
-# options parsing
+#options parsing
 echo $0 $@
 options_parse $@
 
+echo "----------------------------------------------"
+echo "use the following command to reinit kerberos:"
+echo "  kinit -l 365d -f -p yaozhongxiao@BYTEDANCE.COM"
+echo ""
+echo "----------------------------------------------"
+echo ""
 set -x
 ssh -t -p ${OPT_PORT} ${OPT_USER}@${OPT_HOST} "cd ${OPT_HOST_HOME};bash"
 set +x
 
+echo ""
 echo "$0 complete...."
