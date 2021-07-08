@@ -1,7 +1,7 @@
 [user]
     name = yaozhongxiao
-    #email = yaozhongxiao@bytedance.com
-    email = zhongxiao.yzx@gmail.com
+    email = yaozhongxiao@bytedance.com
+    #email = zhongxiao.yzx@gmail.com
 
 [color]
     ui = auto
@@ -24,3 +24,4 @@
 
 [alias]
     logx = log --all --pretty=fuller --graph
+    icommit = -c user.email='zhongxiao.yzx@gmail.com' commit

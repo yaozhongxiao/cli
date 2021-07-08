@@ -340,7 +340,10 @@ endif
 map <C-m> :py3f ~/Workspace/DevTools/cli/vim/clang-format.py<cr>
 "imap <C-m> <c-o>:py3f ~/Workspace/DevTools/cli/vim/clang-format.py<cr>
 "
+
+let g:solarized_diffmode="high"
 if &diff
    colorscheme molokai
    "colorscheme github
 endif
+
