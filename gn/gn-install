@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#
+# Copyright 2021 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
+WORKSPACE_DIR=${SCRIPT_DIR}/..
+
+source ${WORKSPACE_DIR}/env.sh
+
+GN_BIN=${SCRIPT_DIR}/${OS_TYPE}/gn-${OS_TYPE}-${MARCH}
+if [ ! -f ${GN_BIN} ];then
+    echo "Error: can not find gn in ${GN_BIN}"
+    exit
+fi
+
+echo "install gn-${OS_TYPE}-${MARCH}"
+if [ -f /usr/local/bin/gn ];then
+    rm -rf /usr/local/bin/gn
+fi
+set -x
+
+# setup gn by symbol link to target gn binary
+ln -s ${GN_BIN} /usr/local/bin/gn
+
+set +x
+echo "gn-install complete ..."

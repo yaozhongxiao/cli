@@ -16,11 +16,18 @@
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
-sed -i "/cli config begin/,/cli config end./ d" ~/.bashrc
+sed -i "" "/cli config begin/,/cli config end./ d" ~/.bashrc
 echo '#-------------------  cli config begin ----------------#' >> ~/.bashrc
 echo "CLI_ROOT=${SCRIPT_DIR}" >> ~/.bashrc
-echo 'PATH=${CLI_ROOT}:${CLI_ROOT}/compiler:${CLI_ROOT}/performance:${CLI_ROOT}/spec:${CLI_ROOT}/r2:${CLI_ROOT}/rpc:${CLI_ROOT}/git:${PATH}' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}:${PATH}' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}/compiler:${PATH}' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}/performance:${PATH}' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}/spec:${PATH}' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}/r2:${PATH}' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}/rpc:${PATH}' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}/git:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/armie:${PATH}' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}/gn:${PATH}' >> ~/.bashrc
 echo '#-------------------  cli config end ------------------#' >> ~/.bashrc
 
 echo "install complete ! ..."
