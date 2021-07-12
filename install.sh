@@ -28,6 +28,7 @@ echo 'PATH=${CLI_ROOT}/rpc:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/git:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/armie:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/gn:${PATH}' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}/ninjatracing:${PATH}' >> ~/.bashrc
 echo '#-------------------  cli config end ------------------#' >> ~/.bashrc
 
 echo "install complete ! ..."
