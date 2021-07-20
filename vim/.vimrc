@@ -128,7 +128,7 @@ Plug 'rhysd/clever-f.vim'
 Plug 'rhysd/github-complete.vim'
 Plug 'yianwillis/vimcdoc'
 Plug 'vim-scripts/indentpython.vim'
-
+Plug 'tpope/vim-fugitive'
 call plug#end()            
 
 " load vim default plugin
@@ -222,6 +222,7 @@ let g:NERDTreeHighlightFolders = 1
 let g:NERDTreeHighlightFoldersFullName = 1 
 let g:NERDTreeDirArrowExpandable='▷'
 let g:NERDTreeDirArrowCollapsible='▼'
+let g:NERDTreeShowHidden = 1
 
 " YCM
 let g:ycm_confirm_extra_conf = 0 
