@@ -346,5 +346,8 @@ let g:solarized_diffmode="high"
 if &diff
    colorscheme molokai
    "colorscheme github
+   map <leader>l :diffget LOCAL<CR>
+   map <leader>b :diffget BASE<CR>
+   map <leader>r :diffget REMOTE<CR>
 endif
 
