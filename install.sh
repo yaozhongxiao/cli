@@ -16,7 +16,9 @@
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
-sed -i "" "/cli config begin/,/cli config end./ d" ~/.bashrc
+source ${SCRIPT_DIR}/env.sh
+
+$xsed "/cli config begin/,/cli config end./ d" ~/.bashrc
 echo '#-------------------  cli config begin ----------------#' >> ~/.bashrc
 echo "CLI_ROOT=${SCRIPT_DIR}" >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}:${PATH}' >> ~/.bashrc
@@ -30,5 +32,8 @@ echo 'PATH=${CLI_ROOT}/armie:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/gn:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/ninjatracing:${PATH}' >> ~/.bashrc
 echo '#-------------------  cli config end ------------------#' >> ~/.bashrc
+
+echo "run git/install.sh for git config"
+echo "run vim/install.sh for vim config"
 
 echo "install complete ! ..."

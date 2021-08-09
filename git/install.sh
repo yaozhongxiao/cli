@@ -16,11 +16,23 @@
 
 set - e
 
-SCRIPT_DIR = "$(cd " $(dirname "$0") "; pwd -P)"
+SCRIPT_DIR="$(cd "$(dirname "$0")";pwd -P)"
+source ${SCRIPT_DIR}/../env.sh
 
 cd ~
+
+[ -f ~/.gitconfig ] && rm -rf ~/.gitconfig
 ln -s ${SCRIPT_DIR}/.gitconfig  ~/.gitconfig
+
+[ -f ~/.git-completion.bash ] && rm -rf ~/.git-completion.bash
 ln -s ${SCRIPT_DIR}/.git-completion.bash .git-completion.bash
+
+[ -f ~/.git-commit-template ] && rm -rf ~/.git-commit-template
 ln -s ${SCRIPT_DIR}/.git-commit-template  .git-commit-template
+
+$xsed "/git config begin/,/git config end./ d" ~/.bashrc
+echo '#------------------- git config begin ----------------#' >> ~/.bashrc
+echo 'source ~/.git-completion.bash' >> ~/.bashrc
+echo '#------------------- git config end ----------------#' >> ~/.bashrc
 
 echo "git config install complete ! ..."

@@ -24,4 +24,4 @@
 
 [alias]
     logx = log --all --pretty=fuller --graph
-    icommit = -c user.email='zhongxiao.yzx@gmail.com' commit
+    icommit = -c user.email='zhongxiao.yzx@gmail.com' commit --author='zhongxiao.yzx<zhongxiao.yzx@gmail.com>'

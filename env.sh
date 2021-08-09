@@ -33,3 +33,8 @@ case $(uname -m) in
     *) echo "please check the march, because it's undefined yet!" ;;
 esac
 
+xsed="sed -i"
+if [ x"${OS_TYPE}" == x"mac" ];then
+  xsed="sed -i \"\""
+fi
+
