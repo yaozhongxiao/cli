@@ -21,8 +21,9 @@ ROOT_DIR=`pwd`
 LLVM_PRO="llvm-project"
 LLVM_INSTALL="llvm-release"
 
-ENABLE_NINJA=false # false
-BUILD_TYPE=Debug
+ENABLE_NINJA=true # false
+ENABLE_CCACHE=true # false
+BUILD_TYPE=RelWithDebInfo #Debug
 BUILD_FORCE=false
 
 function usage() {
@@ -32,6 +33,8 @@ function usage() {
     -h|--help         This Message.
     -f|--force        Force Building.
     --ninja           Build With ninja (default is makefile)
+    --ccache          Build With ccache
+    --ccache-size     Build With ccache-size
     --root            Build Project in root directiry
     --llvm            LLVM Project to be built
     --install         LLVM release directory to install
@@ -64,6 +67,21 @@ function options_parse() {
             --ninja)
                 ENABLE_NINJA=true
                 ;;
+            --disable-ninja)
+                ENABLE_NINJA=false
+                ;;
+            --ccache)
+                ENABLE_CCACHE=true
+                ;;
+            --ccache-size)
+                shift
+                if [ x"$1" != x"-*" ];then
+                  LLVM_CCACHE_SIZE=$1
+                fi
+                ;;
+            --disable-ccache)
+                ENABLE_CCACHE=false
+                ;;
             -d|--debug)
                 BUILD_TYPE=Debug
                 ;;
@@ -91,21 +109,13 @@ function options_parse() {
 echo $0 $@
 options_parse $@
 
-if [ x"false" == x"${BUILD_FORCE}" ];then
-if [ -z $1 ];then
-    echo ""
-    read -p "use default work directory : ${ROOT_DIR} [y/n]" options
-    if [ x$options != x'y' ];then
-        exit
-    fi
-fi
-fi
-
 timestamp_begin=$(date +%Y-%m-%d_%H-%M-%S)
 
 INSTALL_ROOT=${ROOT_DIR}/${LLVM_INSTALL}
 LLVM_SRC_ROOT=${ROOT_DIR}/${LLVM_PRO}
 LLVM_OBJ_ROOT=${ROOT_DIR}/llvm-build
+LLVM_CCACHE_ROOT=${ROOT_DIR}/llvm-ccache
+LLVM_CCACHE_SIZE="50.0G"
 if [ ! -d ${LLVM_OBJ_ROOT} ];then
     mkdir -p ${LLVM_OBJ_ROOT}
 fi
@@ -118,6 +128,9 @@ echo "ROOT_DIR     : ${ROOT_DIR}"
 echo "SRC_DIR      : ${LLVM_SRC_ROOT}"
 echo "INSTALL_ROOT : ${INSTALL_ROOT}"
 echo "ENABLE_NINJA : ${ENABLE_NINJA}"
+echo "ENABLE_CCACHE: ${ENABLE_CCACHE}"
+echo "CCACHE_DIR   : ${LLVM_CCACHE_ROOT}"
+echo "CCACHE_SIZE  : ${LLVM_CCACHE_SIZE}"
 echo "current dir  : `pwd`"
 
 # ------------- build llvm-project -------------- #"
@@ -126,6 +139,9 @@ LLVM_BUILD_ARGS="\
     -DCMAKE_PREFIX_PATH=${INSTALL_ROOT} \
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
     -DLLVM_ENABLE_DUMP=ON \
+    -DLLVM_CCACHE_BUILD=ON \
+    -DLLVM_CCACHE_MAXSIZE=${LLVM_CCACHE_SIZE} \
+    -DLLVM_CCACHE_DIR=${LLVM_CCACHE_ROOT}
     -DLLVM_ENABLE_PROJECTS=clang;clang-tools-extra;compiler-rt;libcxx;libcxxabi;libunwind;lld;lldb;"
 
 cmake_exe=cmake
@@ -140,6 +156,21 @@ command -v ninja >/dev/null 2>&1 && ${ENABLE_NINJA} && {
     fi
 }
 
+command -v ccache >/dev/null 2>&1 && ${ENABLE_CCACHE} || {
+  echo "please install ccache beforehand!"
+  exit -1
+}
+
+if [ x"false" == x"${BUILD_FORCE}" ];then
+if [ -z $1 ];then
+    echo ""
+    read -p "use default work directory : ${ROOT_DIR} [y/n]" options
+    if [ x$options != x'y' ];then
+        exit
+    fi
+fi
+fi
+
 cd $LLVM_OBJ_ROOT
 echo "$cmake_exe ${LLVM_BUILD_ARGS} ${LLVM_SRC_ROOT}/llvm"
 if [ x"false" == x"${BUILD_FORCE}" ];then
@@ -153,7 +184,7 @@ fi
 set -x
 # sleep 5
 ${cmake_exe} ${LLVM_BUILD_ARGS} ${LLVM_SRC_ROOT}/llvm
-${make_exe} -j64
+${make_exe} -j8
 ${make_exe} install
 
 timestamp_end=$(date +%Y-%m-%d_%H-%M-%S)
