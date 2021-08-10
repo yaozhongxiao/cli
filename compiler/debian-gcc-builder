@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+#
+# Copyright 2020 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+set -e
+SCRIPT_DIR=$(cd $(dirname $0); pwd -P)
+ROOT_DIR=`pwd`
+if [ -z $1 ];then
+    echo ""
+    read -p "use default work directory : ${ROOT_DIR} [y/n]" options
+    if [ x$options != x'y' ];then
+        exit
+    fi
+else
+    ROOT_DIR=$1
+fi
+
+function install_prerequisition() {
+  # install prerequisition utils
+  sudo apt install -y flex
+  sudo apt install -y lbzip2
+  sudo apt install -y file
+
+  sudo apt install -y libgpm-dev
+  sudo apt install -y libmpfr-dev
+  sudo apt install -y libmpc-dev
+}
+
+INSTALL_ROOT=${ROOT_DIR}/gcc-release
+GCC_SRC_ROOT=${ROOT_DIR}/gcc-project
+GCC_OBJ_ROOT=${ROOT_DIR}/gcc-build
+if [ ! -d ${GCC_OBJ_ROOT} ];then
+    mkdir -p ${GCC_OBJ_ROOT}
+fi
+GCC_INSTALL_PREFIX=${INSTALL_ROOT}
+
+set -x
+# 1. download prerequisition
+command -v flex 2>&1 >/dev/null || {
+  echo "gcc building environment setup ..."
+  install_prerequisition
+}
+
+timestamp_begin=$(date +%Y-%m-%d_%H-%M-%S)
+
+# 2. config
+cd ${GCC_OBJ_ROOT}
+# rebuild will failed bcz of the CC has changed previous run
+# by bootstrap, we need to clean the previous config beforehand!
+if [ -f ${GCC_OBJ_ROOT}/gcc/config.cache ];then
+    make distclean
+fi
+${GCC_SRC_ROOT}/configure --prefix=${GCC_INSTALL_PREFIX} -enable-checking=release -enable-languages=c,c++ -disable-multilib
+set +x
+
+echo "${GCC_SRC_ROOT} building ..."
+make -j32
+
+echo "${GCC_SRC_ROOT} installing ..."
+make install
+
+# 4. config the gcc and libstdc++.* to available
+cp -rf ${SCRIPT_DIR}/gcc-enable ${GCC_INSTALL_PREFIX}/gcc-enable
+sed -i "s:\(GCC_RELEASE=\).*:\1${GCC_INSTALL_PREFIX}:g" ${GCC_INSTALL_PREFIX}/gcc-enable
+# echo "source ${GCC_INSTALL_PREFIX}/gcc-enable" >> ~/.bashrc
+
+timestamp_end=$(date +%Y-%m-%d_%H-%M-%S)
+echo "[${timestamp_begin}, ${timestamp_end}]"
+
+echo "~_~"
+echo "gcc building complete ..."
