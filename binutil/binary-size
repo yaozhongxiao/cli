@@ -22,7 +22,7 @@ fi
 
 function usage() {
     cat << EOF
-    Usage: $0 [--map-file] [--toolchain] binary
+    Usage: $0 [--map-file ld.map ] [--toolchain arch-eabi ] binary
     Options:
         --map-file  elf.map  ; map-file generated with "-Wl,-Map=output.map" during linkage.
         --toolchain          ; map-file generated with "-Wl,-Map=output.map" during linkage.
@@ -74,7 +74,7 @@ TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
 ARCHIVE_NAME=liblynx.so.20210827_233126
 ARCHIVE_NAME=${TARGET_ELF}.${TIMESTAMP}
 
-${SCRIPT_DIR}/supersize archive ${ARCHIVE_NAME}.size --map-file ${ELF_MAP_FILE} --tool-prefix ${TOOL_PREFIX} 
+${SCRIPT_DIR}/supersize archive --no-output-directory ${ARCHIVE_NAME}.size --map-file ${ELF_MAP_FILE} --tool-prefix ${TOOL_PREFIX} 
 supersize html_report ${ARCHIVE_NAME}.size ${ARCHIVE_NAME}.ndjson
 
 cat << EOF

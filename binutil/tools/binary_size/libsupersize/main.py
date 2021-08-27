@@ -124,12 +124,12 @@ def main():
     sys.exit(1)
 
   args = parser.parse_args()
-
   logging.basicConfig(level=logging.WARNING - args.verbose * 10,
                       format='%(levelname).1s %(relativeCreated)6d %(message)s')
 
   if logging.getLogger().isEnabledFor(logging.DEBUG):
     atexit.register(_LogPeakRamUsage)
+
   def on_config_error(*args):
     parser.error(*args)
 
