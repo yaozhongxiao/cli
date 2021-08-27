@@ -18,10 +18,12 @@
 [diff]
     tool = vimdiff
 
-
 [commit]
     template = ~/.git-commit-template
 
 [alias]
     logx = log --all --pretty=fuller --graph
     icommit = -c user.email='zhongxiao.yzx@gmail.com' commit --author='zhongxiao.yzx<zhongxiao.yzx@gmail.com>'
+
+[mergetool]
+	keepBackup = false

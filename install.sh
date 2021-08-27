@@ -31,6 +31,8 @@ echo 'PATH=${CLI_ROOT}/git:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/armie:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/gn:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/ninjatracing:${PATH}' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}/binutil:${PATH}' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}/cmd:${PATH}' >> ~/.bashrc
 echo '#-------------------  cli config end ------------------#' >> ~/.bashrc
 
 echo "run git/install.sh for git config"

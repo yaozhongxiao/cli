@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+#
+# Copyright 2021 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
+if [ -z ${ANDROID_NDK} ];then
+  echo "please set ANDROID_NDK env!"
+fi
+
+function usage() {
+    cat << EOF
+    Usage: $0 [--map-file] [--toolchain] binary
+    Options:
+        --map-file  elf.map  ; map-file generated with "-Wl,-Map=output.map" during linkage.
+        --toolchain          ; map-file generated with "-Wl,-Map=output.map" during linkage.
+        binary               ; shared library(so) or binary
+EOF
+}
+
+PLATFORM_TOOLCHAIN=${ANDROID_NDK}/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64
+ABI_PREFIX=arm-linux-androideabi-
+ELF_MAP_FILE="output.map"
+TARGET_ELF=""
+function options_parse() {
+    while test $# -gt 0; do
+        case "$1" in
+            --map-file)
+              shift
+              if [ x"$1" != x"-*" ];then
+                ELF_MAP_FILE=$1
+              fi
+              ;;
+            --toolchain)
+              shift
+              if [ x"$1" != x"-*" ];then
+                PLATFORM_TOOLCHAIN=$1
+              fi
+              ;;
+            -*)
+                echo "Unknown option \"$1\"." >&2
+                usage
+                exit 1
+                ;;
+            *)
+              TARGET_ELF=$1
+        esac
+        shift
+    done
+}
+
+# parse args
+options_parse $@
+
+if [ ! -f ${TARGET_ELF} ];then
+  echo "can not find ${TARGET_ELF}!"
+  exit -1
+fi
+
+TOOL_PREFIX=${PLATFORM_TOOLCHAIN}/bin/${ABI_PREFIX}
+TIMESTAMP=$(date '+%Y%m%d_%H%M%S')
+ARCHIVE_NAME=liblynx.so.20210827_233126
+ARCHIVE_NAME=${TARGET_ELF}.${TIMESTAMP}
+
+${SCRIPT_DIR}/supersize archive ${ARCHIVE_NAME}.size --map-file ${ELF_MAP_FILE} --tool-prefix ${TOOL_PREFIX} 
+supersize html_report ${ARCHIVE_NAME}.size ${ARCHIVE_NAME}.ndjson
+
+cat << EOF
+
+select mode to view result:
+   1 : local-supersize
+   2 : chrome-supersize
+   3 : console
+   * : exit
+   ----------------
+EOF
+read -p "   : " option
+
+# kill old service if exists
+pid=$(ps aux |grep supersize | grep -v grep | awk '{print $2}')
+if [ ! -z $pid ];then
+  kill -9 $pid
+fi
+
+case "${option}" in
+  1)
+    echo "supersize start_server ${ARCHIVE_NAME}.ndjson"
+    supersize start_server ${ARCHIVE_NAME}.ndjson &
+    echo "open http://127.0.0.1:8000/viewer.html?load_url=load_url=oneoffs%2F${ARCHIVE_NAME}.ndjson"
+    open http://127.0.0.1:8000/viewer.html?load_url=load_url=oneoffs%2F${ARCHIVE_NAME}.ndjson
+    ;;
+  2)
+    echo "https://chrome-supersize.firebaseapp.com/viewer.html?load_url=oneoffs%2F${ARCHIVE_NAME}.ndjson"
+    open https://chrome-supersize.firebaseapp.com/viewer.html?load_url=oneoffs%2F${ARCHIVE_NAME}.ndjson
+    ;;
+  3)
+    echo "supersize console ${ARCHIVE_NAME}.size --query=\"Print(canned_queries.TemplatesByName(depth=-1))\""
+    supersize console ${ARCHIVE_NAME}.size --query="Print(canned_queries.TemplatesByName(depth=-1))"
+    ;;
+  *)
+    echo "supersize start_server ${ARCHIVE_NAME}.ndjson"
+    supersize start_server ${ARCHIVE_NAME}.ndjson &
+    echo "open http://127.0.0.1:8000/viewer.html?load_url=load_url=oneoffs%2F${ARCHIVE_NAME}.ndjson"
+    open http://127.0.0.1:8000/viewer.html?load_url=load_url=oneoffs%2F${ARCHIVE_NAME}.ndjson
+    ;;
+esac
+
+echo "~_~"
+echo "binarysize for ${TARGET_ELF} complete ..."

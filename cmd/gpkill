@@ -1,0 +1,8 @@
+#!/bin/bash
+
+express=$1
+pid_list=$(ps aux | grep ${express} | grep -v grep | grep -v gpkill | awk '{print $2}')
+for pid in $pid_list; do
+  echo $pid
+  kill -9 $pid
+done
