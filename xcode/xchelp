@@ -1,0 +1,186 @@
+#!/usr/bin/env bash
+#
+# Copyright 2021 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+script_dir="$(cd "$(dirname "$0")"; pwd -P)"
+
+workspace_name=""
+project_name=""
+project_dir=`pwd`
+scheme_name=""
+test_plan=""
+dest_target="platform=?"
+
+declare -a commands=()
+
+function usage() {
+  cat << EOF
+  Usage: $0 command [options]
+  command:
+      setting      display settings for xcworkspace or xcodeproj
+      destination  display available destination for xcworkspace or xcodeproj
+      list         list infos for xcworkspace or xcodeproj
+  Options:
+      --help              show this message
+      --root      ${path} set workspace directory
+      --project   ${name} set project name
+      --workspace ${name} set workspace name
+      --testplan  ${name} set testplan name
+EOF
+}
+
+function options_parse() {
+  while test $# -gt 0; do
+      case "$1" in
+          --root)
+            shift
+            proj_path=$1
+            if [ x"$1" != x"-*" ];then
+              if [ ${proj_path:0:1} != "/"  ]; then
+                proj_path=`pwd`/${proj_path}
+              fi
+              project_dir=$proj_path
+            fi
+            ;;
+          --project)
+            shift
+            if [ x"$1" != x"-*" ];then
+              project_name=$1
+              workspace_name=""
+              if [ x${scheme_name} == x"" ];then
+                scheme_name=${project_name}
+              fi
+            fi
+            ;;
+          --workspace)
+            shift
+            if [ x"$1" != x"-*" ];then
+              workspace_name=$1
+              project_name=""
+              if [ x${scheme_name} == x"" ];then
+                scheme_name=${workspace_name}
+              fi
+            fi
+            ;;
+          --scheme)
+            shift
+            if [ x"$1" != x"-*" ];then
+              scheme_name=$1
+            fi
+            ;;
+          --testplan)
+            shift
+            if [ x"$1" != x"-*" ];then
+              test_plan=$1
+            fi
+            ;;
+          -*)
+            usage
+            exit 1
+            ;;
+          *)
+            commands+=($1)
+            ;;
+      esac
+      shift
+  done
+}
+
+function showList() {
+  echo "----------------------------------------------"
+  local setting_scope=""
+  if [ x"${workspace_name}" != x"" ];then
+    setting_scope="-workspace ${workspace_name}.xcworkspace"
+  elif [ x"${project_name}" != x"" ];then
+    setting_scope="-project ${project_name}.xcodeproj"
+  fi
+
+  set -x
+  xcodebuild -list ${setting_scope}
+  set +x
+}
+
+function showSetting() {
+  echo "----------------------------------------------"
+  local setting_scope=""
+  local scheme_scope=""
+  if [ x"${workspace_name}" != x"" ];then
+    setting_scope="-workspace ${workspace_name}.xcworkspace"
+  elif [ x"${project_name}" != x"" ];then
+    setting_scope="-project ${project_name}.xcodeproj"
+  fi
+  if [ x${scheme_name} != x"" ];then
+    scheme_scope="-scheme ${scheme_name}"
+  fi
+
+  set -x
+  xcodebuild test-without-building -showBuildSettings ${setting_scope} ${scheme_scope}
+  set +x
+}
+
+function showDest() {
+  echo "----------------------------------------------"
+  local setting_scope=""
+  local scheme_scope=""
+  if [ x"${workspace_name}" != x"" ];then
+    setting_scope="-workspace ${workspace_name}.xcworkspace"
+  elif [ x"${project_name}" != x"" ];then
+    setting_scope="-project ${project_name}.xcodeproj"
+  fi
+  if [ x${scheme_name} != x"" ];then
+    scheme_scope="-scheme ${scheme_name}"
+  fi
+
+  set -x
+  xcodebuild test-without-building ${setting_scope} ${scheme_scope} -destination "platform=?"
+  set +x
+}
+
+function execute() {
+  while test $# -gt 0; do
+      case "$1" in
+          list)
+            showList
+            ;;
+          settings)
+            showSetting
+            ;;
+          destination)
+            showDest
+            ;;
+          *)
+            echo "undefined commands ${1}"
+            usage
+            exit 1
+            ;;
+      esac
+      shift
+  done
+}
+
+echo $0 $@
+options_parse $@
+
+echo "workspace_name: $workspace_name"
+echo "project_name  : $project_name"
+echo "project_dir   : $project_dir"
+echo "scheme_name   : $scheme_name"
+echo "test_plan     : $test_plan"
+echo "commands      : ${commands[@]}"
+
+execute ${commands[@]}
+
+echo " $0 complelte ...... ^_^"
