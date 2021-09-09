@@ -39,4 +39,6 @@ echo '#-------------------  cli config end ------------------#' >> ~/.bashrc
 echo "run git/install.sh for git config"
 echo "run vim/install.sh for vim config"
 
+${SCRIPT_DIR}/xcode/install.sh
+
 echo "install complete ! ..."

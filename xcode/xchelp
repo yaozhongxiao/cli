@@ -26,6 +26,9 @@ dest_target="platform=?"
 
 declare -a commands=()
 
+XCODE_HOME=/Applications/Xcode.app/Contents/Developer
+XCODE_TOOLS_DIR=${XCODE_HOME}/usr/bin
+
 function usage() {
   cat << EOF
   Usage: $0 command [options]
@@ -33,6 +36,7 @@ function usage() {
       setting      display settings for xcworkspace or xcodeproj
       destination  display available destination for xcworkspace or xcodeproj
       list         list infos for xcworkspace or xcodeproj
+      tools        list xcode tools (xcrun tool)
   Options:
       --help              show this message
       --root      ${path} set workspace directory
@@ -148,10 +152,18 @@ function showDest() {
   xcodebuild test-without-building ${setting_scope} ${scheme_scope} -destination "platform=?"
   set +x
 }
+function showXCTools() {
+  echo "----------------------------------------------"
+  echo "\$ ${XCODE_TOOLS_DIR}"
+  ls ${XCODE_TOOLS_DIR}
+}
 
 function execute() {
   while test $# -gt 0; do
       case "$1" in
+          tools)
+            showXCTools
+            ;;
           list)
             showList
             ;;
