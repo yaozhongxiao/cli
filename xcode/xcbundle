@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+#
+# Copyright 2021 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+script_dir="$(cd "$(dirname "$0")"; pwd -P)"
+
+project_dir=`pwd`
+project_name=${project_dir##*/}
+workspace_name=""
+test_plan=""
+
+build_arch=x86_64
+simulator_sdk=$(xcodebuild -showsdks | grep "Simulator.*-.*iOS.*-sdk*")
+sdk_version=$(echo ${simulator_sdk} | sed "s/Simulator.*-.*iOS *\([0-9]*?[0-9]*\).*/\1/g")
+# need to trim the begin "\s"
+sdk_name=$(echo ${simulator_sdk} | sed "s/Simulator.*-.*iOS.*-sdk\s*\(\S*\)/\1/g")
+sdk_name=$(echo ${sdk_name} | sed "s/ *\(\S*\)/\1/g")
+dest_target="platform=iOS Simulator,OS=${sdk_version},name=iPhone 11"
+
+function usage() {
+  cat << EOF
+  Usage: $0 [options]
+  Options:
+      --help            This Message.
+      --root      path  Workspace Directory
+      --project   name  Project Name
+      --workspace name  Workspace Name
+      --sdk       name  SDK Name [iphonesimulator14.5, etc.]
+      --arch      name  Arch Name [x86_64, arm64, etc.]
+EOF
+}
+
+function options_parse() {
+  while test $# -gt 0; do
+      case "$1" in
+          --sdk)
+            shift
+            if [ x"$1" != x"-*" ];then
+              sdk_name=$1
+            fi
+            ;;
+          --arch)
+            shift
+            if [ x"$1" != x"-*" ];then
+              build_arch=$1
+            fi
+            ;;
+          --root)
+            shift
+            proj_path=$1
+            if [ x"$1" != x"-*" ];then
+              if [ ${proj_path:0:1} != "/"  ]; then
+                proj_path=`pwd`/${proj_path}
+              fi
+              project_dir=$proj_path
+            fi
+            ;;
+          --project)
+            shift
+            if [ x"$1" != x"-*" ];then
+              project_name=$1
+              workspace_name=""
+            fi
+            ;;
+          --workspace)
+            shift
+            if [ x"$1" != x"-*" ];then
+              workspace_name=$1
+              project_name=${workspace_name}
+            fi
+            ;;
+          -*)
+            usage
+            exit 1
+            ;;
+          *)
+            COMMANDS+=($1)
+            ;;
+      esac
+      shift
+  done
+}
+echo $0 $@
+options_parse $@
+cd ${project_dir}
+
+XC_SYMROOT=${project_dir}/Build/Products
+echo "workspace_name : ${workspace_name}"
+echo "project_name   : ${project_name}"
+echo "project_dir    : ${project_dir}"
+echo "sdk_name       : ${sdk_name}"
+echo "sdk_version    : ${sdk_version}"
+echo "build_arch     : ${build_arch}"
+echo "Destination    : ${dest_target}"
+echo "XC_SYMROOT     : ${XC_SYMROOT}"
+
+test_scope="-project"
+test_scope_name=${project_name}.xcodeproj
+if [ x${workspace_name} != x"" ];then
+  test_scope="-workspace"
+  test_scope_name="${workspace_name}.xcworkspace"
+fi
+
+test_plan_cmd=""
+test_plan_product=""
+if [ x"${test_plan}" != x"" ];then
+  test_plan_cmd="-testPlan ${test_plan}"
+  test_plan_product="${test_plan}_"
+fi
+
+# build product will generate into SYMROOT
+$exec xcodebuild build \
+  ${test_scope} ${test_scope_name} \
+  -scheme ${TEST_SCHEME} \
+  -configuration Debug \
+  -sdk "${sdk_name}" \
+  -destination "${dest_target}" \
+  SYMROOT=${XC_SYMROOT} \
+  ${test_plan_cmd} \
+
+echo " complete ^_^"

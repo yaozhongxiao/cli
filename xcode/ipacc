@@ -1,0 +1,176 @@
+#!/bin/bash
+# Copyright 2021 The Lynx Authors. All rights reserved.
+
+set -e
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
+
+WORKSPACE_NAME=Example
+PROJECT_NAME=Example
+PROJECT_DIR=`pwd`
+PROJECT_CLEAN=false
+DEPS_SETUP=false
+BUILD_ARCH=x86_64
+BUILD_CONFIG=Release
+EXPORT_PLIST="${SCRIPT_DIR}/ExportPlists/example_app.plist"
+DEST_TARGET='generic/platform=iOS'
+ARCHIVE_SCHEME=${PROJECT_NAME}
+
+function usage() {
+  cat << EOF
+  Usage: $0 [options]
+  Options:
+      --help            This Message.
+      --clean           Force Clean Before Run Archive
+      --setup           Dependencies Setup
+      --root      path  Workspace Directory
+      --project   name  Project Name
+      --workspace name  Workspace Name
+      --scheme    name  Scheme Name
+      --sdk       name  SDK Name [iphonesimulator14.5, etc.]
+      --arch      name  Arch Name [x86_64, arm64, etc.]
+      --config    mode  Configurations [Debug, Release, etc.]
+      --plist     path  plist for export
+EOF
+}
+
+function options_parse() {
+  while test $# -gt 0; do
+      case "$1" in
+          --clean)
+            PROJECT_CLEAN=true
+            ;;
+          --setup)
+            DEPS_SETUP=true
+            ;;
+          --sdk)
+            shift
+            if [ x"$1" != x"-*" ];then
+              SDK_NAME=$1
+            fi
+            ;;
+          --arch)
+            shift
+            if [ x"$1" != x"-*" ];then
+              BUILD_ARCH=$1
+            fi
+            ;;
+          --config)
+            shift
+            if [ x"$1" != x"-*" ];then
+              BUILD_CONFIG=$1
+            fi
+            ;;
+          --plist)
+            shift
+            plist_path=$1
+            if [ x"$1" != x"-*" ];then
+              if [ ${plist_path:0:1} != "/"  ]; then
+                plist_path=`pwd`/${proj_path}
+              fi
+              EXPORT_PLIST=$proj_path
+            fi
+            ;;
+          --root)
+            shift
+            proj_path=$1
+            if [ x"$1" != x"-*" ];then
+              if [ ${proj_path:0:1} != "/"  ]; then
+                proj_path=`pwd`/${proj_path}
+              fi
+              PROJECT_DIR=$proj_path
+            fi
+            ;;
+          --project)
+            shift
+            if [ x"$1" != x"-*" ];then
+              PROJECT_NAME=$1
+              WORKSPACE_NAME=""
+            fi
+            ;;
+          --workspace)
+            shift
+            if [ x"$1" != x"-*" ];then
+              WORKSPACE_NAME=$1
+              PROJECT_NAME=${WORKSPACE_NAME}
+            fi
+            ;;
+          --scheme)
+            shift
+            if [ x"$1" != x"-*" ];then
+              ARCHIVE_SCHEME=$1
+            fi
+            ;;
+          -*)
+            usage
+            exit 1
+            ;;
+          *)
+            COMMANDS+=($1)
+            ;;
+      esac
+      shift
+  done
+}
+echo $0 $@
+options_parse $@
+cd ${PROJECT_DIR}
+
+XC_SYMROOT=${PROJECT_DIR}/Build/Products
+echo "WORKSPACE_NAME : ${WORKSPACE_NAME}"
+echo "PROJECT_NAME   : ${PROJECT_NAME}"
+echo "PROJECT_DIR    : ${PROJECT_DIR}"
+echo "SDK_VERSION    : ${SDK_VERSION}"
+echo "BUILD_ARCH     : ${BUILD_ARCH}"
+echo "DESTINATION    : ${DEST_TARGET}"
+echo "XC_SYMROOT     : ${XC_SYMROOT}"
+
+gem_bundle=
+if [ -f Gemfile ];then
+  bundle install
+  gem_bundle="bundle exec"
+fi
+if [ -f Podfile ];then
+  if [ -d ${PROJECT_DIR}/Pods} ];then
+    rm -rf ${PROJECT_DIR}/Pods
+  fi
+  ${gem_bundle} pod install --repo-update
+fi
+
+ARCHIVE_SCOPE="-project"
+ARCHIVE_SCOPE_NAME=${PROJECT_NAME}.xcodeproj
+if [ x${WORKSPACE_NAME} != x"" ];then
+  ARCHIVE_SCOPE="-workspace"
+  ARCHIVE_SCOPE_NAME="${WORKSPACE_NAME}.xcworkspace"
+fi
+
+# exec="echo"
+exec=
+set -x
+
+# clean project
+$exec xcodebuild clean \
+  ${ARCHIVE_SCOPE} ${ARCHIVE_SCOPE_NAME} \
+   -scheme ${ARCHIVE_SCHEME}
+
+# build for archive
+if [ -d ${XC_SYMROOT} ];then
+  rm -rf ${XC_SYMROOT}
+fi
+# *DO NOT* arhive with *SYMROOT* which lead
+# to export the malformed archive to be exported!
+$exec xcodebuild archive \
+  ${ARCHIVE_SCOPE} ${ARCHIVE_SCOPE_NAME} \
+  -scheme ${ARCHIVE_SCHEME} \
+  -configuration ${BUILD_CONFIG} \
+  -destination "${DEST_TARGET}" \
+  -archivePath ${XC_SYMROOT}/${PROJECT_NAME}.xcarchive \
+  -UseModernBuildSystem=NO \
+  -showBuildTimingSummary
+
+$exec xcodebuild -exportArchive \
+  -archivePath ${XC_SYMROOT}/${PROJECT_NAME}.xcarchive \
+  -exportPath ${XC_SYMROOT}/${PROJECT_NAME}.ipa \
+  -exportOptionsPlist ${EXPORT_PLIST} \
+  -showBuildTimingSummary
+
+echo " please check ipa : ${XC_SYMROOT}/${PROJECT_NAME}.ipa ^_^"
