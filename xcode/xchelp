@@ -33,7 +33,7 @@ function usage() {
   cat << EOF
   Usage: $0 command [options]
   command:
-      setting      display settings for xcworkspace or xcodeproj
+      settings     display settings for xcworkspace or xcodeproj
       destination  display available destination for xcworkspace or xcodeproj
       list         list infos for xcworkspace or xcodeproj
       tools        list xcode tools (xcrun tool)
@@ -131,7 +131,7 @@ function showSetting() {
   fi
 
   set -x
-  xcodebuild test-without-building -showBuildSettings ${setting_scope} ${scheme_scope}
+  xcodebuild -showBuildSettings ${setting_scope} ${scheme_scope}
   set +x
 }
 
@@ -149,7 +149,7 @@ function showDest() {
   fi
 
   set -x
-  xcodebuild test-without-building ${setting_scope} ${scheme_scope} -destination "platform=?"
+  xcodebuild ${setting_scope} ${scheme_scope} -destination "platform=?"
   set +x
 }
 function showXCTools() {

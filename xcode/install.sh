@@ -18,11 +18,14 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 source ${SCRIPT_DIR}/../env.sh
 SimApp='/Applications/Xcode.app/Contents/Developer/Applications/Simulator.app'
+PodSrc='/Library/Ruby/Gems/2.6.0/gems/cocoapods-1.8.4/lib/cocoapods'
 
 $xsed "/xcode config begin/,/xcode config end./ d" ~/.bashrc
 echo '#-------------------  xcode config begin ----------------#' >> ~/.bashrc
 echo 'alias simopen="open -a Simulator"' >> ~/.bashrc
 echo 'alias simctl="xcrun simctl"' >> ~/.bashrc
 echo 'alias xccov="xcrun xccov"' >> ~/.bashrc
+echo "PodSrc=${PodSrc}" >> ~/.bashrc
+echo 'alias podsrc="echo ${PodSrc}"' >> ~/.bashrc
 echo '#-------------------  xcode config end ------------------#' >> ~/.bashrc
 
