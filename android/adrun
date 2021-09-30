@@ -45,8 +45,7 @@ function ShowAndroidDevices() {
 
 function StartAVD() {
   avd_name=$1
-  # nohup emulator -no-window -writable-system -avd ${avd_name} &
-  nohup emulator -avd ${avd_name} &
+  ${script_dir}/emu_bootup.sh --verbose
 }
 
 function ConnectDevices() {

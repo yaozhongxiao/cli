@@ -24,6 +24,7 @@ $xsed "/xcode config begin/,/xcode config end./ d" ~/.bashrc
 echo '#-------------------  xcode config begin ----------------#' >> ~/.bashrc
 echo 'alias simopen="open -a Simulator"' >> ~/.bashrc
 echo 'alias simctl="xcrun simctl"' >> ~/.bashrc
+echo 'alias xcdevice="xcrun xcdevice"' >> ~/.bashrc
 echo 'alias xccov="xcrun xccov"' >> ~/.bashrc
 echo "PodSrc=${PodSrc}" >> ~/.bashrc
 echo 'alias podsrc="echo ${PodSrc}"' >> ~/.bashrc
