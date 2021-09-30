@@ -28,14 +28,7 @@ EOF
 }
 
 function installEmulator() {
-  echo "download ANDROID-SDK ......"
-  # setup the qemu-kvm and adduser
-  # https://stackoverflow.com/questions/37300811/android-studio-dev-kvm-device-permission-denied
-  user_name=$1
-  sudo apt install qemu-kvm
-  sudo adduser ${user_name} kvm
-  sudo chown -R ${user_name}:${user_name} /dev/kvm
-  grep kvm /etc/group
+  ${script_dir}/emu_setup.sh install
 }
 
 function ShowAndroidDevices() {

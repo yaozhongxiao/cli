@@ -18,12 +18,14 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 source ${SCRIPT_DIR}/../env.sh
 
-$xsed "/android-sdk config begin/,/android-sdk config end/ d" ~/.bashrc
-echo '#-------------------  android-sdk config begin ----------------#' >> ~/.bashrc
-echo 'export ANDROID_SDK_HOME=${ANDROID_HOME}' >> ~/.bashrc
-echo 'export PATH=${ANDROID_SDK_HOME}/platform-tools:$PATH' >> ~/.bashrc
-echo 'export PATH=${ANDROID_SDK_HOME}/emulator:$PATH' >> ~/.bashrc
-echo 'export PATH=${ANDROID_SDK_HOME}/cmdline-tools/latest/bin:$PATH' >> ~/.bashrc
-echo '# export ANDROID_AVD_HOME=~/.android/avd' >> ~/.bashrc
-echo '#-------------------  android-sdk config end ------------------#' >> ~/.bashrc
+config_file=~/.bashrc
+$xsed "/android-sdk config begin/,/android-sdk config end/ d" ${config_file}
+echo '#-------------------  android-sdk config begin ----------------#' >> ${config_file}
+echo 'export ANDROID_SDK_ROOT=${ANDROID_HOME}' >> ${config_file}
+echo 'export PATH=${ANDROID_SDK_ROOT}/platform-tools:$PATH' >> ${config_file}
+echo 'export PATH=${ANDROID_SDK_ROOT}/emulator:$PATH' >> ${config_file}
+echo 'export PATH=${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:$PATH' >> ${config_file}
+echo 'export PATH=${ANDROID_SDK_ROOT}/tools/bin:$PATH' >> ${config_file}
+echo '# export ANDROID_AVD_HOME=~/.android/avd' >> ${config_file}
+echo '#-------------------  android-sdk config end ------------------#' >> ${config_file}
 
