@@ -37,6 +37,7 @@ function usage() {
       destination  display available destination for xcworkspace or xcodeproj
       list         list infos for xcworkspace or xcodeproj
       tools        list xcode tools (xcrun tool)
+      sdks         show sdk informations
   Options:
       --help              show this message
       --root      ${path} set workspace directory
@@ -135,6 +136,13 @@ function showSetting() {
   set +x
 }
 
+function showSdks() {
+  echo "----------------------------------------------"
+  set -x
+  xcodebuild -showsdks
+  set +x
+}
+
 function showDest() {
   echo "----------------------------------------------"
   local setting_scope=""
@@ -169,6 +177,9 @@ function execute() {
             ;;
           settings)
             showSetting
+            ;;
+          sdks)
+            showSdks
             ;;
           destination)
             showDest
