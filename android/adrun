@@ -39,7 +39,7 @@ function ShowAndroidDevices() {
 
   devices_list=($(adb devices | grep "device$" | awk '{print $1}'))
   devices_nums=${#devices_list[@]}
-  echo "\n----------${devices_nums} connnected devices ------------"
+  echo -e "\n----------${devices_nums} connnected devices ------------"
   adb devices
 }
 

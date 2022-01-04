@@ -43,5 +43,6 @@ echo "run vim/install.sh for vim config"
 ${SCRIPT_DIR}/compiler/install.sh
 ${SCRIPT_DIR}/xcode/install.sh
 ${SCRIPT_DIR}/android/install.sh
+${SCRIPT_DIR}/docs/install.sh
 
 echo "install complete ! ..."
