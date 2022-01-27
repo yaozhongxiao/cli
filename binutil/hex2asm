@@ -1,0 +1,140 @@
+#!/usr/bin/python3
+
+import sys
+import os
+import re
+import binascii
+import subprocess
+import getopt
+
+objdump64 = 'aarch64-linux-android-objdump'
+objdump32 = 'arm-linux-androideabi-objdump'
+
+def disassembleFile(filePath, forceArm = True):
+    f = open(filePath)
+
+    line = f.readline()
+
+    binaryCodes = []
+    firstAddress = ''
+    codeSize = 0
+    found = False
+
+    while line:
+        if found:
+            if line == '\n':
+                if firstAddress != '' and codeSize != 0 and len(binaryCodes) != 0:
+                    disassembleBinaryCodes(firstAddress, binaryCodes, forceArm)
+                firstAddress = ''
+                codeSize = 0
+                binaryCodes = []
+                found = False
+            else:
+                words = line.split()
+                if firstAddress == '':
+                    firstAddress = words[0]
+                    align_size = 8 * int((len(firstAddress) + 7) / 8)
+                    firstAddress=firstAddress.zfill(align_size)
+                    codeSize = len(firstAddress)
+                if codeSize == 8:
+                    binaryCodes.append(words[1]);
+                    binaryCodes.append(words[2]);
+                    binaryCodes.append(words[3]);
+                    binaryCodes.append(words[4]);
+                elif codeSize == 16:
+                    binaryCodes.append(words[1]);
+                    binaryCodes.append(words[2]);
+                else:
+                    print ("err line:" + line)
+                    break
+        elif line.startswith('code around'):
+            found = True
+        elif line.startswith('memory near pc:'):
+            found = True
+        elif line.startswith('memory near lr:'):
+            found = True
+        elif line.startswith('memory map: '):
+            break
+        line = f.readline()
+    f.close()
+
+    if firstAddress != '' and codeSize != 0 and len(binaryCodes) != 0:
+        disassembleBinaryCodes(firstAddress, binaryCodes, forceArm)
+
+def disassembleBinaryCodes(firstAddress, binaryCodes, forceArm):
+    stream = ''
+    codeSize = len(firstAddress)
+
+    for code in binaryCodes:
+        i = codeSize
+        while i:
+            stream += code[i-2:i]
+            i -= 2
+
+    binPath = firstAddress+'.bin'
+    binfile = open(binPath,'wb')
+    bin_stream=binascii.a2b_hex(stream)
+    binfile.write(binascii.a2b_hex(stream))
+    binfile.close()
+
+    cmd = ''
+    if codeSize == 8:
+        cmd = objdump32 + ' -b binary -m arm '
+        if forceArm:
+            pass
+        else:
+            cmd += ' -M force-thumb'
+    else:
+        cmd = objdump64 + ' -b binary -m aarch64'
+
+    cmd += ' -D ' + binPath
+    cmd += ' --adjust-vma='+'0x'+firstAddress
+
+    print(cmd)
+    result = subprocess.getstatusoutput(cmd)
+    # os.remove(binPath)
+
+    if result[0] == 0:
+        print ('*'*100)
+        lines = result[1].split('\n')
+        first = False
+        for line in lines:
+            if first:
+                print ('  ' + line)
+            elif line == firstAddress + ' <.data>:':
+                first = True
+    else:
+        print (result[1])
+
+def showHelp():
+    print("""
+    -D --disassemble
+       --force-arm
+            $ ./TombAnalyzer.py --force-arm -D tombstone_00 
+    """)
+
+def main(argv):
+    arg_disassemble_file = ''
+    arg_force_arm = True
+    try:
+        sort_opt = 'hD:'
+        long_opt = ['help','disassemble=','force-arm']
+        opts, args = getopt.getopt(argv,sort_opt,long_opt)
+    except getopt.GetoptError:
+        print ("err opt'")
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            showHelp()
+            sys.exit()
+        elif opt in ('-D', '--disassemble'):
+            arg_disassemble_file = arg
+        elif opt == '--force-thumb':
+            arg_force_arm = False
+
+    if arg_disassemble_file != '':
+        disassembleFile(arg_disassemble_file, arg_force_arm)
+    else:
+        disassembleFile('./Binary.txt', arg_force_arm)
+if __name__ == "__main__":
+   main(sys.argv[1:])
