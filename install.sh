@@ -44,5 +44,6 @@ ${SCRIPT_DIR}/compiler/install.sh
 ${SCRIPT_DIR}/xcode/install.sh
 ${SCRIPT_DIR}/android/install.sh
 ${SCRIPT_DIR}/docs/install.sh
+${SCRIPT_DIR}/cmd/install.sh
 
 echo "install complete ! ..."

@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+#
+# Copyright 2022 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
+cli_config=${SCRIPT_DIR}/cli-config.bash
+
+declare -a commands=()
+
+function usage() {
+  cat << EOF
+  Usage: $0 command [options]
+  command:
+      list          list all avail commands
+  Options:
+      -h | --help   show this message
+EOF
+}
+
+function list_commands() {
+  cat << EOF
+  -----------------------------------------
+  gdb2lldb - open the gdb vs lldb commands page
+  gpkill   - kill the process with "name"
+  ba_zulip - open the bytecode-alliance community zulip chat root
+  -----------------------------------------
+EOF
+}
+
+function options_parse() {
+  while test $# -gt 0; do
+      case "$1" in
+          list)
+            list_commands
+            ;;
+          -h | --help)
+            usage
+            exit 1
+            ;;
+          *)
+            commands+=($1)
+            ;;
+      esac
+      shift
+  done
+}
+
+# parse cli options
+echo $0 $@
+options_parse $@
