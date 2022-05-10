@@ -35,6 +35,7 @@ echo 'PATH=${CLI_ROOT}/binutil:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/cmd:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/xcode:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/android:${PATH}' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}/wasm:${PATH}' >> ~/.bashrc
 echo '#-------------------  cli config end ------------------#' >> ~/.bashrc
 
 echo "run git/install.sh for git config"

@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+#
+# Copyright 2022 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
+
+CC=clang
+OPT_IMPORT=""
+OPT_EXPORT=""
+OPT_TARGET=""
+OPT_SRC=""
+
+declare -a commands=()
+
+function usage() {
+  cat << EOF
+  Usage: $0 [options] src
+
+  Options:
+      -cc compiler         set the compiler(default clang)
+      -import import.sym   set the imported symbol
+      -export export.sym   set the export symbol
+      -o  target           set the target output
+      -h | --help          show this message
+EOF
+}
+
+function options_parse() {
+  while test $# -gt 0; do
+      case "$1" in
+          -o)
+            shift
+            OPT_TARGET=$1
+            OPT_TARGET=${OPT_TARGET%.*}
+            OPT_TARGET="${OPT_TARGET}.wasm"
+            ;;
+          -cc)
+            shift
+            CC=$1
+            ;;
+          -import)
+            shift
+            OPT_IMPORT=$1
+            ;;
+          -export)
+            shift
+            OPT_EXPORT=$1
+            ;;
+          -h | --help)
+            usage
+            exit 1
+            ;;
+          *)
+            OPT_SRC=$1
+            commands+=($1)
+            ;;
+      esac
+      shift
+  done
+}
+
+# parse cli options
+echo $0 $@
+options_parse $@
+
+if [ -z ${OPT_TARGET} ];then
+  OPT_TARGET="${OPT_SRC}.wasm"
+fi
+
+BUILD_FLAG="\
+    --target=wasm32 -nostdlib \
+    -Wl,--no-entry \
+    -Wl,--export-dynamic \
+    -O3 -flto \
+    -Wl,--lto-O3 \
+    -Wl,--export=__data_end \
+    -Wl,--export=__heap_base \
+    -Wl,--export=main \
+    -Wl,--allow-undefined"
+    #-Wl,--initial-memory=65536 \
+
+if [ -f "${OPT_IMPORT}" ];then
+  # imports.sym file will defines the extern functions
+  BUILD_FLAG="\
+    -Wl,--allow-undefined-file=${OPT_IMPORT} \
+    ${BUILD_FLAG}"
+fi
+
+if [ -f "${OPT_EXPORT}" ];then
+  exported_symbols=""
+  while read symbol
+  do
+    if [ ! -z ${symbol} ];then
+      exported_symbols="${exported_symbols} -Wl,--export=${symbol}"
+    fi
+  done < ${OPT_EXPORT}
+  BUILD_FLAG="\
+    ${BUILD_FLAG} \
+    ${exported_symbols}"
+fi
+
+set -x
+$CC ${BUILD_FLAG} -o ${OPT_TARGET} ${OPT_SRC}
