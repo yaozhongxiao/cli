@@ -1,0 +1,54 @@
+# Copyright 2022 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+config("wamr_config") {
+  include_dirs = ["${root_build_dir}/wamr/out/include/"]
+  lib_dirs = [ "${root_build_dir}/wamr/out/lib" ]
+  libs = ["iwasm"] # or use full path directly
+  ldflags = [
+    "-Wl,-rpath,@loader_path/"+rebase_path("${root_build_dir}/wamr/out/lib", root_build_dir),
+  ]
+  visibility = [ ":wamr_libs" ]
+}
+
+action("wamr_download") {
+  script = "//build/util/git_clone.py"
+  sources = []
+  outputs = ["${root_build_dir}/wamr"]
+  args = [
+    "-o", rebase_path(outputs[0], root_build_dir),
+    "git@github.com:bytecodealliance/wasm-micro-runtime.git",
+  ]
+}
+
+action("wamr_build") {
+  script = "//build/util/wamr/wamr_build.py"
+  sources = ["$root_build_dir/wamr"]
+  outputs = ["$root_build_dir/wamr/out"]
+  args = [
+    "-o", rebase_path(outputs[0], root_build_dir),
+    "-b", rebase_path("//build/util/wamr/wamr_build.sh", root_build_dir),
+    rebase_path(sources[0], root_build_dir),
+  ]
+  deps = [
+    ":wamr_download"
+  ]
+}
+
+group("wamr_libs") {
+  public_configs = [":wamr_config"]
+  deps = [
+    ":wamr_build"
+  ]
+}
