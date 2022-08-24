@@ -28,5 +28,6 @@ echo 'alias xcdevice="xcrun xcdevice"' >> ~/.bashrc
 echo 'alias xccov="xcrun xccov"' >> ~/.bashrc
 echo "PodSrc=${PodSrc}" >> ~/.bashrc
 echo 'alias podsrc="echo ${PodSrc}"' >> ~/.bashrc
+echo 'alias xcode="xed"' >> ~/.bashrc
 echo '#-------------------  xcode config end ------------------#' >> ~/.bashrc
 

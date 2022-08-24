@@ -18,6 +18,12 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 source ${SCRIPT_DIR}/env.sh
 
+CONFIG_FILE=~/.bashrc
+if [ -f ${CONFIG_FILE} ];then
+  mv ${CONFIG_FILE} ${CONFIG_FILE}_bk
+fi
+cp -rf ${SCRIPT_DIR}/.bashrc ${CONFIG_FILE}
+
 $xsed "/cli config begin/,/cli config end./ d" ~/.bashrc
 echo '#-------------------  cli config begin ----------------#' >> ~/.bashrc
 echo "CLI_ROOT=${SCRIPT_DIR}" >> ~/.bashrc
@@ -38,13 +44,19 @@ echo 'PATH=${CLI_ROOT}/android:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/wasm:${PATH}' >> ~/.bashrc
 echo '#-------------------  cli config end ------------------#' >> ~/.bashrc
 
-echo "run git/install.sh for git config"
-echo "run vim/install.sh for vim config"
+${SCRIPT_DIR}/git/install.sh
+
+cd ${SCRIPT_DIR}/vim
+${SCRIPT_DIR}/vim/install.sh
+cd -
 
 ${SCRIPT_DIR}/compiler/install.sh
 ${SCRIPT_DIR}/xcode/install.sh
 ${SCRIPT_DIR}/android/install.sh
 ${SCRIPT_DIR}/docs/install.sh
 ${SCRIPT_DIR}/cmd/install.sh
+
+echo "brew install bash-completion"
+echo '[[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ]] && . "/opt/homebrew/etc/profile.d/bash_completion.sh"' >> ~/.bashrc
 
 echo "install complete ! ..."

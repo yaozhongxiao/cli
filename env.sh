@@ -29,6 +29,7 @@ case $(uname -m) in
     i386)   MARCH="386" ;;
     i686)   MARCH="386" ;;
     x86_64) MARCH="amd64" ;;
+    arm64)  MARCH="arm64" ;;
     arm)    dpkg --print-architecture | grep -q "arm64" && MARCH="arm64" || MARCH="arm" ;;
     *) echo "please check the march, because it's undefined yet!" ;;
 esac
