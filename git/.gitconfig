@@ -23,6 +23,7 @@
 
 [alias]
     logx = log --all --pretty=fuller --graph
+    logs = log --pretty=format:'%C(auto)%ad %h %<(15,trunc)%C(auto)%an %C(auto)%d %s'
     icommit = -c user.email='zhongxiao.yzx@gmail.com' commit --author='zhongxiao.yzx<zhongxiao.yzx@gmail.com>'
 
 [mergetool]
