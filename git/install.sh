@@ -34,6 +34,7 @@ $xsed "/git config begin/,/git config end./ d" ~/.bashrc
 echo '#------------------- git config begin ----------------#' >> ~/.bashrc
 echo 'source ~/.git-completion.bash' >> ~/.bashrc
 echo "alias git-icommit=\"git -c user.email='zhongxiao.yzx@gmail.com' --author='zhongxiao.yzx<zhongxiao.yzx@gmail.com>' commit\"" >> ~/.bashrc
+echo "alias igit=\"git -c user.email='zhongxiao.yzx@gmail.com'\"" >> ~/.bashrc
 echo '#------------------- git config end ----------------#' >> ~/.bashrc
 
 echo "git config install complete ! ..."

@@ -42,6 +42,7 @@ echo 'PATH=${CLI_ROOT}/cmd:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/xcode:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/android:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/wasm:${PATH}' >> ~/.bashrc
+echo 'PATH=${CLI_ROOT}/security:${PATH}' >> ~/.bashrc
 echo '#-------------------  cli config end ------------------#' >> ~/.bashrc
 
 ${SCRIPT_DIR}/git/install.sh
