@@ -36,6 +36,6 @@ esac
 
 xsed="sed -i"
 if [ x"${OS_TYPE}" == x"mac" ];then
-  xsed="sed -i \"\""
+  xsed="sed -i ''"
 fi
 

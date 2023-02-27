@@ -56,6 +56,7 @@ ${SCRIPT_DIR}/xcode/install.sh
 ${SCRIPT_DIR}/android/install.sh
 ${SCRIPT_DIR}/docs/install.sh
 ${SCRIPT_DIR}/cmd/install.sh
+${SCRIPT_DIR}/v8/install.sh
 
 echo "brew install bash-completion"
 echo '[[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ]] && . "/opt/homebrew/etc/profile.d/bash_completion.sh"' >> ~/.bashrc
