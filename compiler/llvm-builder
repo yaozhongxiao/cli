@@ -26,6 +26,10 @@ BUILD_TYPE=Debug #RelWithDebInfo
 BUILD_FORCE=false
 BUILD_JOBS=2
 LLVM_CCACHE_SIZE="50.0G"
+LLVM_EXTRA_BUILD_TARGET=";"
+
+LLVM_TO_BUILD=false
+LLVM_TO_INSTALL=false
 
 function usage() {
     cat << EOF
@@ -36,12 +40,14 @@ function usage() {
     --ninja           Build With ninja (default is makefile)
     --ccache          Build With ccache
     --ccache-size n   Build With ccache-size
-    --build    path   Build Project in path directiry
+    --build   [path]  Build Project in path directiry
+    --install [path]  LLVM release directory to install
+    --all             Build + Install
     --llvm     path   LLVM Project to be built
-    --install  path   LLVM release directory to install
     -d|--debug        Build With Debug Mode (default)
     -r|--release      Build With Release Mode
     -j|--jobs  n      Build Jobs
+    --target t        ";" Seperated Extra Build Target
 EOF
 }
 
@@ -49,21 +55,23 @@ function options_parse() {
     while test $# -gt 0; do
         case "$1" in
             --llvm)
-              shift
-              if [ x"$1" != x"-*" ];then
-                LLVM_SRC_ROOT=$1
+              if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                LLVM_SRC_ROOT=$2
+                shift
               fi
               ;;
             --install)
-              shift
-              if [ x"$1" != x"-*" ];then
-                LLVM_INSTALL=$1
+              LLVM_TO_INSTALL=true
+              if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                LLVM_INSTALL=$2
+                shift
               fi
               ;;
             --build)
-              shift
-              if [ x"$1" != x"-*" ];then
-                BUILD_ROOT_DIR=$1
+              LLVM_TO_BUILD=true
+              if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                BUILD_ROOT_DIR=$2
+                shift
               fi
               ;;
             --ninja)
@@ -76,9 +84,21 @@ function options_parse() {
                 ENABLE_CCACHE=true
                 ;;
             --ccache-size)
-                shift
-                if [ x"$1" != x"-*" ];then
-                  LLVM_CCACHE_SIZE=$1
+                if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                  LLVM_CCACHE_SIZE=$2
+                  shift
+                fi
+                ;;
+            --target)
+                if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                  LLVM_EXTRA_BUILD_TARGET=$2
+                  shift
+                fi
+                ;;
+            -j|--jobs)
+                if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                  BUILD_JOBS=$2
+                  shift
                 fi
                 ;;
             -j|--jobs)
@@ -96,10 +116,14 @@ function options_parse() {
             -r|--release)
                 BUILD_TYPE=Release
                 ;;
+            --all)
+                LLVM_TO_BUILD=true
+                LLVM_TO_INSTALL=true
+                ;;
             -f|--force)
                 BUILD_FORCE=true
                 ;;
-            -h|--help)
+            -*|-h|--help)
                 usage
                 exit 0
                 ;;
@@ -131,7 +155,8 @@ if [ x"${LLVM_SRC_ROOT:0:1}" != x"/" ]; then
 fi
 
 LLVM_OSX_ARCHITECTURES="arm64"
-LLVM_BUILD_TARGETS="AArch64;ARM;WebAssembly;X86"
+
+LLVM_BUILD_TARGETS="AArch64;ARM;WebAssembly;X86;Mips;${LLVM_EXTRA_BUILD_TARGET}"
 LLVM_BUILD_PROJECTS="clang;clang-tools-extra;lld;lldb;mlir"
 # LLVM_BUILD_RUNTIMES="libc;libunwind;libcxxabi;libcxx;compiler-rt"
 LLVM_BUILD_RUNTIMES="libunwind;libcxxabi;libcxx;compiler-rt"
@@ -147,6 +172,8 @@ echo "CCACHE_SIZE            : ${LLVM_CCACHE_SIZE}"
 echo "LLVM_TARGETS_TO_BUILD" : ${LLVM_BUILD_TARGETS}
 echo "LLVM_BUILD_PROJECTS"   : ${LLVM_BUILD_PROJECTS}
 echo "current dir            : `pwd`"
+echo "LLVM_TO_BUILD"         : ${LLVM_TO_BUILD}
+echo "LLVM_TO_INSTALL"       : ${LLVM_TO_INSTALL}
 
 # ------------- build llvm-project -------------- #"
 LLVM_BUILD_ARGS="\
@@ -201,13 +228,21 @@ if [ x"false" == x"${BUILD_FORCE}" ];then
     fi
 fi
 
-set -x
 # sleep 5
+#
+# config
 ${cmake_exe} ${LLVM_BUILD_ARGS} ${LLVM_SRC_ROOT}/llvm
-${make_exe} -j ${BUILD_JOBS}
-${make_exe} install
+# build
+if [ x"true" == x"${LLVM_TO_BUILD}" ];then
+  echo "${make_exe} -j ${BUILD_JOBS}"
+  ${make_exe} -j ${BUILD_JOBS}
+fi
+# install
+if [ x"true" == x"${LLVM_TO_INSTALL}" ];then
+  echo "${make_exe} install"
+  ${make_exe} install
+fi
 
-set +x
 timestamp_end=$(date +%Y-%m-%d_%H-%M-%S)
 echo "[${timestamp_begin}, ${timestamp_end}]"
 
