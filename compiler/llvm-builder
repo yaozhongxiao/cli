@@ -17,14 +17,15 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
-ROOT_DIR=`pwd`
-LLVM_PRO="llvm-project"
-LLVM_INSTALL="llvm-release"
+BUILD_ROOT_DIR=`pwd`
 
+LLVM_SRC_ROOT=`pwd`
 ENABLE_NINJA=true # false
 ENABLE_CCACHE=true # false
-BUILD_TYPE=RelWithDebInfo #Debug
+BUILD_TYPE=Debug #RelWithDebInfo
 BUILD_FORCE=false
+BUILD_JOBS=2
+LLVM_CCACHE_SIZE="50.0G"
 
 function usage() {
     cat << EOF
@@ -34,12 +35,13 @@ function usage() {
     -f|--force        Force Building.
     --ninja           Build With ninja (default is makefile)
     --ccache          Build With ccache
-    --ccache-size     Build With ccache-size
-    --root            Build Project in root directiry
-    --llvm            LLVM Project to be built
-    --install         LLVM release directory to install
+    --ccache-size n   Build With ccache-size
+    --build    path   Build Project in path directiry
+    --llvm     path   LLVM Project to be built
+    --install  path   LLVM release directory to install
     -d|--debug        Build With Debug Mode (default)
     -r|--release      Build With Release Mode
+    -j|--jobs  n      Build Jobs
 EOF
 }
 
@@ -49,7 +51,7 @@ function options_parse() {
             --llvm)
               shift
               if [ x"$1" != x"-*" ];then
-                LLVM_PRO=$1
+                LLVM_SRC_ROOT=$1
               fi
               ;;
             --install)
@@ -58,10 +60,10 @@ function options_parse() {
                 LLVM_INSTALL=$1
               fi
               ;;
-            --root)
+            --build)
               shift
               if [ x"$1" != x"-*" ];then
-                ROOT_DIR=$1
+                BUILD_ROOT_DIR=$1
               fi
               ;;
             --ninja)
@@ -77,6 +79,12 @@ function options_parse() {
                 shift
                 if [ x"$1" != x"-*" ];then
                   LLVM_CCACHE_SIZE=$1
+                fi
+                ;;
+            -j|--jobs)
+                shift
+                if [ x"$1" != x"-*" ];then
+                  BUILD_JOBS=$1
                 fi
                 ;;
             --disable-ccache)
@@ -96,9 +104,7 @@ function options_parse() {
                 exit 0
                 ;;
             *)
-            echo "Unknown option \"$1\"." >&2
-                usage
-                exit 1
+                LLVM_SRC_ROOT="$1"
                 ;;
         esac
         shift
@@ -109,29 +115,38 @@ function options_parse() {
 echo $0 $@
 options_parse $@
 
+LLVM_INSTALL="LLVMFor${BUILD_TYPE}"
+
 timestamp_begin=$(date +%Y-%m-%d_%H-%M-%S)
 
-INSTALL_ROOT=${ROOT_DIR}/${LLVM_INSTALL}
-LLVM_SRC_ROOT=${ROOT_DIR}/${LLVM_PRO}
-LLVM_OBJ_ROOT=${ROOT_DIR}/llvm-build
-LLVM_CCACHE_ROOT=${ROOT_DIR}/llvm-ccache
-LLVM_CCACHE_SIZE="50.0G"
+INSTALL_ROOT=${BUILD_ROOT_DIR}/${LLVM_INSTALL}
+LLVM_CCACHE_ROOT=${BUILD_ROOT_DIR}/llvm-ccache
+LLVM_OBJ_ROOT=${BUILD_ROOT_DIR}/llvm-build
 if [ ! -d ${LLVM_OBJ_ROOT} ];then
     mkdir -p ${LLVM_OBJ_ROOT}
 fi
-if [ ! -d ${LLVM_SRC_ROOT} ];then
-   LLVM_SRC_ROOT=${ROOT_DIR}
+
+if [ x"${LLVM_SRC_ROOT:0:1}" != x"/" ]; then
+    LLVM_SRC_ROOT=`pwd`/${LLVM_SRC_ROOT}
 fi
 
-echo "SCRIPT_DIR   : ${SCRIPT_DIR}"
-echo "ROOT_DIR     : ${ROOT_DIR}"
-echo "SRC_DIR      : ${LLVM_SRC_ROOT}"
-echo "INSTALL_ROOT : ${INSTALL_ROOT}"
-echo "ENABLE_NINJA : ${ENABLE_NINJA}"
-echo "ENABLE_CCACHE: ${ENABLE_CCACHE}"
-echo "CCACHE_DIR   : ${LLVM_CCACHE_ROOT}"
-echo "CCACHE_SIZE  : ${LLVM_CCACHE_SIZE}"
-echo "current dir  : `pwd`"
+LLVM_OSX_ARCHITECTURES="arm64"
+LLVM_BUILD_TARGETS="AArch64;ARM;WebAssembly;X86"
+LLVM_BUILD_PROJECTS="clang;clang-tools-extra;lld;lldb;mlir"
+# LLVM_BUILD_RUNTIMES="libc;libunwind;libcxxabi;libcxx;compiler-rt"
+LLVM_BUILD_RUNTIMES="libunwind;libcxxabi;libcxx;compiler-rt"
+echo "# ------------- llvm-project build config -------------- #""
+echo "SCRIPT_DIR             : ${SCRIPT_DIR}"
+echo "BUILD_ROOT_DIR         : ${BUILD_ROOT_DIR}"
+echo "SRC_DIR                : ${LLVM_SRC_ROOT}"
+echo "INSTALL_ROOT           : ${INSTALL_ROOT}"
+echo "ENABLE_NINJA           : ${ENABLE_NINJA}"
+echo "ENABLE_CCACHE          : ${ENABLE_CCACHE}"
+echo "CCACHE_DIR             : ${LLVM_CCACHE_ROOT}"
+echo "CCACHE_SIZE            : ${LLVM_CCACHE_SIZE}"
+echo "LLVM_TARGETS_TO_BUILD" : ${LLVM_BUILD_TARGETS}
+echo "LLVM_BUILD_PROJECTS"   : ${LLVM_BUILD_PROJECTS}
+echo "current dir            : `pwd`"
 
 # ------------- build llvm-project -------------- #"
 LLVM_BUILD_ARGS="\
@@ -140,9 +155,14 @@ LLVM_BUILD_ARGS="\
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
     -DLLVM_ENABLE_DUMP=ON \
     -DLLVM_CCACHE_BUILD=ON \
+    -DLLVM_INCLUDE_TESTS=Off \
+    -DLLVM_ENABLE_BACKTRACES=Off \
+    -DCMAKE_OSX_ARCHITECTURES=${LLVM_OSX_ARCHITECTURES} \
     -DLLVM_CCACHE_MAXSIZE=${LLVM_CCACHE_SIZE} \
-    -DLLVM_CCACHE_DIR=${LLVM_CCACHE_ROOT}
-    -DLLVM_ENABLE_PROJECTS=clang;clang-tools-extra;compiler-rt;libcxx;libcxxabi;libunwind;lld;lldb;"
+    -DLLVM_CCACHE_DIR=${LLVM_CCACHE_ROOT} \
+    -DLLVM_ENABLE_PROJECTS=${LLVM_BUILD_PROJECTS} \
+    -DLLVM_ENABLE_RUNTIMES=${LLVM_BUILD_RUNTIMES} \
+    -DLLVM_TARGETS_TO_BUILD=${LLVM_BUILD_TARGETS}"
 
 cmake_exe=cmake
 make_exe=make
@@ -164,7 +184,7 @@ command -v ccache >/dev/null 2>&1 && ${ENABLE_CCACHE} || {
 if [ x"false" == x"${BUILD_FORCE}" ];then
 if [ -z $1 ];then
     echo ""
-    read -p "use default work directory : ${ROOT_DIR} [y/n]" options
+    read -p "use default work directory : ${BUILD_ROOT_DIR} [y/n]" options
     if [ x$options != x'y' ];then
         exit
     fi
@@ -175,7 +195,7 @@ cd $LLVM_OBJ_ROOT
 echo "$cmake_exe ${LLVM_BUILD_ARGS} ${LLVM_SRC_ROOT}/llvm"
 if [ x"false" == x"${BUILD_FORCE}" ];then
     echo ""
-    read -p "try to build the llvm projects in ${ROOT_DIR} ... [y/n]" option
+    read -p "try to build the llvm projects in ${BUILD_ROOT_DIR} ... [y/n]" option
     if [ x"y" != x${option} ];then
         exit 0
     fi
@@ -184,9 +204,10 @@ fi
 set -x
 # sleep 5
 ${cmake_exe} ${LLVM_BUILD_ARGS} ${LLVM_SRC_ROOT}/llvm
-${make_exe} -j8
+${make_exe} -j ${BUILD_JOBS}
 ${make_exe} install
 
+set +x
 timestamp_end=$(date +%Y-%m-%d_%H-%M-%S)
 echo "[${timestamp_begin}, ${timestamp_end}]"
 
