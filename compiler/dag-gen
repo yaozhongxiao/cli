@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+#
+# Copyright 2023 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
+
+AllViewDags=("--view-dag-combine1-dags" \
+             "--view-legalize-types-dags" \
+             "--view-dag-combine-lt-dags" \
+             "--view-legalize-dags" \
+             "--view-dag-combine2-dags" \
+             "--view-isel-dags" \
+             "--view-sched-dags" \
+             "--view-sunit-dags")
+
+ViewDags=()
+llc_bin="xllc"
+dag_src_file=""
+dag_filetype="asm"
+dag_march="x86"
+
+function usage() {
+    cat << EOF
+    Usage: $0 [options] src[.bc|.ll]
+    Options:
+    -h|--help                       This Message.
+    --llc   bin                     llc Binary.
+    -march  arch                    -march for llc
+    -filetype [asm|obj]             -filetype for llc
+    -v|--view                       view dags.
+       --view-dag-combine1-dags     - Pop up a window to show dags before the first dag combine pass
+       --view-legalize-types-dags   - Pop up a window to show dags before legalize types
+       --view-dag-combine-lt-dags   - Pop up a window to show dags before the post legalize types dag combine pass
+       --view-legalize-dags         - Pop up a window to show dags before legalize
+       --view-dag-combine2-dags     - Pop up a window to show dags before the second dag combine pass
+       --view-isel-dags             - Pop up a window to show isel dags as they are selected
+       --view-sched-dags            - Pop up a window to show sched dags as they are processed
+       --view-sunit-dags            - Pop up a window to show SUnit dags after they are processed
+EOF
+}
+
+function options_parse() {
+    while test $# -gt 0; do
+        case "$1" in
+            -v|--view)
+                ViewDags+=("$2")
+                shift
+                ;;
+            -march)
+                dag_march=$2
+                shift
+                ;;
+            -filetype)
+                dag_filetype=$2
+                shift
+                ;;
+            -*|-h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                dag_src_file=$1
+                ;;
+        esac
+        shift
+    done
+}
+
+# parse cli options
+echo $0 $@
+options_parse $@
+
+if [ -z "${dag_src_file}" ];then
+  usage
+  exit -1
+fi
+src_file_name=$(basename "$dag_src_file")
+src_file_name="${src_file_name%%.*}"
+
+size=${#ViewDags[@]}
+if (( size <= 0));then
+  ViewDags=${AllViewDags[@]}
+fi
+
+function gen_dag_view() {
+  view_dag_type=$1
+  dotfile=`${llc_bin} ${view_dag_type} -view-background -march=${dag_march} -relocation-model=pic -filetype=${dag_filetype} ${dag_src_file}  2>&1 -o /dev/null | grep -m 1 -Eo "\/.*\.dot"`
+  if [ -z "${dotfile}" ];then
+    echo "can not generate dag view for ${view_dag_type}"
+    return
+  fi
+  output_filename=${src_file_name}${view_dag_type}
+  if [ -f "${output_filename}.dot" ];then
+    rm -rf ${output_filename}.dot
+  fi
+  cp ${dotfile} ${output_filename}.dot
+  rm -rf ${dotfile}
+  echo "dot -Tpng ${output_filename}.dot -o ${output_filename}.png"
+  dot -Tpng ${output_filename}.dot -o ${output_filename}.png
+}
+
+for view_dag in ${ViewDags[@]}
+do
+  gen_dag_view ${view_dag}
+done
