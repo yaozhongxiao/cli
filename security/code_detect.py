@@ -25,18 +25,24 @@ def get_file(keywords_list, ignore_list_keywords):
                             pattern = re.compile(keyword, flags=re.I)
                             if len(pattern.findall(line)) > 0:
                                 print(os.path.join(root, file) + " \nforbidden info:" + str(pattern.findall(line)[0]))
-                                with open(os.getcwd() + './result.txt', 'a+',  encoding='utf-8') as g:
+                                with open(os.getcwd() + '/result.txt', 'a+',  encoding='utf-8') as g:
                                     g.write(os.path.join(root, file) + " \nforbidden info:" + str(pattern.findall(line)[0]) + '\n')
 
 
 def detection_result():
-    if os.path.exists(os.getcwd() + './result.txt'):
+    if os.path.exists(os.getcwd() + '/result.txt'):
         print('======= Failed: forbidden infos has been dectected ! =======')
+        print("check the detail infos in %s"%("result.txt")) 
         pass
     else:
         print('======= Passed: forbidden infos has not been dectected ! =======')
 
+def detection_start():
+    if os.path.exists(os.getcwd() + '/result.txt'):
+        os.remove(os.getcwd() + '/result.txt')
+
 def main():
+    detection_start()
     keywords_list = []
     ignore_list_keywords = ["[^*<>]{0,6}token[^]()!<>;/@&,]{0,10}[=:].{0,1}null,", ".{0,5}user.{0,10}[=:].{ 0,1}null", ".{0,5}pass.{0,10}[=:].{0,1}null", "passport[=:].", "[^*<>]{0,6}key[^]()!<>;/]{0,10}[=:].{0,1}string.{0,10}", ".{0,5}user.{0,10}[=:].{0,1}string", ".{0,5}pass.{0,10}[=:].{0,1}string",".{0,5}app_id[^]()!<>;/@&,]{0,10}[=:].{0,10}\+",".{0,5}appid[^]()!<>;/@&,]{0,10}[=:].{0,10}\+"]
     get_file(keywords_list, ignore_list_keywords)

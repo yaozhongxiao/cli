@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+#
+# Copyright 2023 WorkGroup Participants. All rights reserved
+#
+set -e
+
+function usage() {
+    cat <<EOF
+    Usage: $0 [options] ; login remote workstation(server)
+    Options:
+    -h|--help         This message.
+    -l|--list         List all ws infos.
+    -u|--user         Set username
+    -ip               Set ip address
+    -ws n             Login ws "n"
+EOF
+}
+
+# input : server info
+function get_login_commands() {
+    local server_info=$1
+    local login_cmd=${server_info%@*}
+    echo $login_cmd
+}
+
+# server info = "username @ ip @ passwd"
+server_list=("yaozhongxiao@10.242.80.3@123456"
+             "yaozhongxiao@10.242.80.30@123456")
+server_num=${#server_list[@]}
+function list_servers() {
+    index=0
+    echo "---------------------------------------------------"
+    for server in ${server_list[@]}; do
+        local login_info=$(get_login_commands $server)
+        echo "[$index]: $login_info"
+        ((index++))
+    done
+    echo "---------------------------------------------------"
+}
+
+SELECT_WS=0
+BUILD_FORCE=""
+LOGIN_USERNAME=""
+LOGIN_IP=""
+function options_parse() {
+    while test $# -gt 0; do
+        case "$1" in
+        -ws)
+            if [[ ! -z $2 ]] && [[ $2 != -* ]]; then
+                SELECT_WS=$2
+                shift
+            fi
+            ;;
+        -u|--user)
+            if [[ ! -z $2 ]] && [[ $2 != -* ]]; then
+                LOGIN_USERNAME=$2
+                shift
+            fi
+            ;;
+        -ip)
+            if [[ ! -z $2 ]] && [[ $2 != -* ]]; then
+                LOGIN_IP=$2
+                shift
+            fi
+            ;;
+        -l | --list)
+            list_servers
+            exit 0
+            ;;
+        -f | --force)
+            BUILD_FORCE="-f"
+            ;;
+        -* | -h | --help)
+            usage
+            exit 0
+            ;;
+        *)
+            usage
+            exit -1
+            ;;
+        esac
+        shift
+    done
+}
+
+# parse cli options
+echo $0 $@
+options_parse $@
+
+if (( $server_num < $SELECT_WS  ));then
+    echo "selected ws $SELECT_WS out of the range [0 ~ $((server_num - 1))]"
+    list_servers
+fi
+LOGIN_WS=${server_list[SELECT_WS]}
+echo "LOGIN_WS: $LOGIN_WS"
+
+login_info=$(get_login_commands $LOGIN_WS)
+if [ -z "${LOGIN_USERNAME}" ];then
+    LOGIN_USERNAME=${login_info%@*}
+fi
+if [ -z "${LOGIN_IP}" ];then
+    LOGIN_IP=${login_info#*@}
+fi
+login_cmd=${LOGIN_USERNAME}@${LOGIN_IP}
+
+set -x
+ssh ${login_cmd}
