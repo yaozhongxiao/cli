@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+#
+# Copyright 2023 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
+source ${SCRIPT_DIR}/../env.sh
+
+function usage() {
+    cat <<EOF
+    Usage: $0 [options] ; login remote workstation(server)
+    Options:
+    -h|--help         This message.
+    -l|--list         List all ws infos.
+    -u|--user         Set username
+    -ip               Set ip address
+    -s|--server n     Login server "n"
+EOF
+}
+
+# input : server info
+function get_login_commands() {
+    local server_info=$1
+    # local login_cmd=${server_info%@*}
+    echo $server_info
+}
+
+DEFAULT_USERNAME=yaozhongxiao
+# server info = "username @ ip"
+server_list=("${DEFAULT_USERNAME}@10.132.61.240"
+             "${DEFAULT_USERNAME}@10.132.61.241")
+server_num=${#server_list[@]}
+function list_servers() {
+    index=0
+    echo "---------------------------------------------------"
+    for server in ${server_list[@]}; do
+        local login_info=$(get_login_commands $server)
+        echo "[$index]: $login_info"
+        ((index++))
+    done
+    echo "---------------------------------------------------"
+}
+
+SELECT_SERVER_ID=0
+BUILD_FORCE=""
+LOGIN_USERNAME=""
+LoginIP=""
+LoginPort=2222
+JUMPSERVER=jumpserver.com
+function options_parse() {
+    while test $# -gt 0; do
+        case "$1" in
+        -s|--server)
+            if [[ ! -z $2 ]] && [[ $2 != -* ]]; then
+                SELECT_SERVER_ID=$2
+                shift
+            fi
+            ;;
+        -u|--user)
+            if [[ ! -z $2 ]] && [[ $2 != -* ]]; then
+                LOGIN_USERNAME=$2
+                shift
+            fi
+            ;;
+        -ip)
+            if [[ ! -z $2 ]] && [[ $2 != -* ]]; then
+                LoginIP=$2
+                shift
+            fi
+            ;;
+        -l | --list)
+            list_servers
+            exit 0
+            ;;
+        -f | --force)
+            BUILD_FORCE="-f"
+            ;;
+        -* | -h | --help)
+            usage
+            exit 0
+            ;;
+        *)
+            usage
+            exit -1
+            ;;
+        esac
+        shift
+    done
+}
+
+# parse cli options
+echo $0 $@
+options_parse $@
+
+if (( $server_num < $SELECT_SERVER_ID  ));then
+    echo "selected server $SELECT_SERVER_ID out of the range [0 ~ $((server_num - 1))]"
+    list_servers
+fi
+LoginServer=${server_list[SELECT_SERVER_ID]}
+echo "LoginServer: $LoginServer"
+
+login_info=$(get_login_commands $LoginServer)
+if [ -z "${LOGIN_USERNAME}" ];then
+    LOGIN_USERNAME=${login_info%@*}
+fi
+if [ -z "${LoginIP}" ];then
+    LoginIP=${login_info#*@}
+fi
+
+Password=${ENV_PIN}
+SecuritToken=${ENV_OTPToken}
+OTPCode=`${SCRIPT_DIR}/otpgen.py ${SecuritToken}`
+
+echo "ssh ${LOGIN_USERNAME}@${JUMPSERVER} -p 2222"
+echo "--> ${LoginIP}"
+
+expect -f ./interact.exp \
+    ${JUMPSERVER} 2222  ${LoginIP} \
+    ${LOGIN_USERNAME} ${Password} $OTPCode

@@ -32,7 +32,6 @@ echo 'PATH=${CLI_ROOT}/compiler:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/performance:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/spec:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/r2:${PATH}' >> ~/.bashrc
-echo 'PATH=${CLI_ROOT}/rpc:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/git:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/armie:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/gn:${PATH}' >> ~/.bashrc
@@ -46,6 +45,7 @@ echo 'PATH=${CLI_ROOT}/security:${PATH}' >> ~/.bashrc
 echo '#-------------------  cli config end ------------------#' >> ~/.bashrc
 
 ${SCRIPT_DIR}/git/install.sh
+${SCRIPT_DIR}/server/install.sh
 
 cd ${SCRIPT_DIR}/vim
 ${SCRIPT_DIR}/vim/install.sh
