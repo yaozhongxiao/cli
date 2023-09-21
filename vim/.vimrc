@@ -338,8 +338,8 @@ if filereadable(expand($HOME . '/.vimrc.local'))
 endif
 
 " clang-format
-nnoremap <C-m> :py3f ~/Workspace/DevTools/cli/vim/clang-format.py<cr>
-"imap <C-m> <c-o>:py3f ~/Workspace/DevTools/cli/vim/clang-format.py<cr>
+map <C-m> :py3f $VIM_ROOT/clang-format.py<cr>
+"imap <C-m> <c-o>:py3f $VIM_ROOT/clang-format.py<cr>
 "
 
 let g:solarized_diffmode="high"

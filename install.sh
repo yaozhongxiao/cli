@@ -45,12 +45,9 @@ echo 'PATH=${CLI_ROOT}/security:${PATH}' >> ~/.bashrc
 echo '#-------------------  cli config end ------------------#' >> ~/.bashrc
 
 ${SCRIPT_DIR}/git/install.sh
-${SCRIPT_DIR}/server/install.sh
-
-cd ${SCRIPT_DIR}/vim
 ${SCRIPT_DIR}/vim/install.sh
-cd -
 
+${SCRIPT_DIR}/server/install.sh
 ${SCRIPT_DIR}/compiler/install.sh
 ${SCRIPT_DIR}/xcode/install.sh
 ${SCRIPT_DIR}/android/install.sh

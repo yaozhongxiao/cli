@@ -1,5 +1,5 @@
 # basic configuration for bashrc
-export PS1='[\u@ \w] '
+export PS1='[\u@\h \w] '
 
 export CLICOLOR=1
 export LC_ALL=en_US.UTF-8
