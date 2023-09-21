@@ -338,7 +338,7 @@ if filereadable(expand($HOME . '/.vimrc.local'))
 endif
 
 " clang-format
-map <C-m> :py3f ~/Workspace/DevTools/cli/vim/clang-format.py<cr>
+nnoremap <C-m> :py3f ~/Workspace/DevTools/cli/vim/clang-format.py<cr>
 "imap <C-m> <c-o>:py3f ~/Workspace/DevTools/cli/vim/clang-format.py<cr>
 "
 
@@ -346,8 +346,8 @@ let g:solarized_diffmode="high"
 if &diff
    colorscheme molokai
    "colorscheme github
-   map <leader>l :diffget LOCAL<CR>
-   map <leader>b :diffget BASE<CR>
-   map <leader>r :diffget REMOTE<CR>
+   nnoremap <leader>1 :diffget LOCAL<CR>
+   nnoremap <leader>2 :diffget BASE<CR>
+   nnoremap <leader>3 :diffget REMOTE<CR>
 endif
 
