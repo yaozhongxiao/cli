@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#
+# Copyright 2023 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
+
+echo ""
+echo "1. list the nvidia display card info"
+lspci | grep -i nvidia
+
+echo ""
+echo "2. list the display card drivers"
+ubuntu-drivers devices
+
+echo ""
+read -p "3. enter the driver id to install $" driver_id
+read -p "do you want to install driver ${driver_id} [y/n]" option
+if [ x"y" == x${option} ];then
+  echo "sudo ${APT} install ${driver_id}"
+  sudo ${APT} install ${driver_id}
+fi
+
+echo ""
+echo "4. list display card infos"
+nvidia-smi
