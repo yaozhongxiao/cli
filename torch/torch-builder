@@ -1,0 +1,261 @@
+#!/usr/bin/env bash
+#
+# Copyright 2023 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+script_dir="$(cd "$(dirname "$0")"; pwd -P)"
+
+py_version=$(python -V 2>&1|awk '{print $2}'| awk -F '.' '{print $1}')
+if (( py_version < 3 ));then
+  echo "please update your python $(python -V 2>&1) -> (>3.8)"
+  exit -1
+fi
+
+torch_repo="git@github.com:pytorch/pytorch.git"
+torch_src_root=`pwd`/pytorch
+
+torch_to_build=true
+torch_build_dir=""
+
+torch_to_install=false
+torch_install_dir=""
+
+enable_ninja=true # false
+enable_ccache=true # false
+build_type=Debug #RelWithDebInfo
+build_force=false
+build_clean=false
+build_jobs=4
+ccache_size="50G"
+
+function usage() {
+    cat << EOF
+    Usage: $0 [options]
+    Options:
+    -h|--help         This Message.
+    -f|--force        Force Building.
+    --ninja           Build With ninja (default is makefile)
+    --disable-ninja   Build Without ninja (default is makefile)
+    --ccache          Build With ccache
+    --disable-ccache  Build Without ccache
+    --ccache-size n   Build With ccache-size
+    -b|--build [path] Build Project in path directiry
+    --install [path]  TORCH release directory to install
+    --all             Build + Install
+    -s|--src  [path]  TORCH Project to be built
+    -d|--debug        Build With Debug Mode (default)
+    -r|--release      Build With Release Mode
+    -j|--jobs  n      Build Jobs
+    -c|--clean        Clean Temporary artifacts at first.
+    --target t        ";" Seperated Extra Build Target
+EOF
+}
+
+function options_parse() {
+    while test $# -gt 0; do
+        case "$1" in
+            -s|--src)
+              if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                torch_src_root=$2
+                shift
+              fi
+              ;;
+            --install)
+              torch_to_install=true
+              if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                torch_install_dir=$2
+                shift
+              fi
+              ;;
+            -b|--build)
+              torch_to_build=true
+              if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                torch_build_dir=$2
+                shift
+              fi
+              ;;
+            --ninja)
+                enable_ninja=true
+                ;;
+            --disable-ninja)
+                enable_ninja=false
+                ;;
+            --ccache)
+                enable_ccache=true
+                ;;
+            --disable-ccache)
+                enable_ccache=false
+                ;;
+            --ccache-size)
+                if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                  ccache_size=$2
+                  shift
+                fi
+                ;;
+            -j|--jobs)
+                if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                  build_jobs=$2
+                  shift
+                fi
+                ;;
+            -d|--debug)
+                build_type=Debug
+                ;;
+            -r|--release)
+                build_type=Release
+                ;;
+            --all)
+                torch_to_build=true
+                torch_to_install=true
+                ;;
+            -f|--force)
+                build_force=true
+                ;;
+            -c|--clean)
+                build_clean=true
+                ;;
+            -*|-h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                torch_src_root="$1"
+                ;;
+        esac
+        shift
+    done
+}
+
+# parse options
+echo $0 $@
+options_parse $@
+
+timestamp_begin=$(date +%Y-%m-%d_%H-%M-%S)
+
+torch_src_root=$(realpath ${torch_src_root})
+# 1. check torch project availability 
+if [ ! -d "${torch_src_root}" ];then
+  echo ""
+  echo "can not find torch project in ${torch_src_root} yet!"
+  read -p "do you want to download torch into ${torch_src_root} directly! [y/n]" option
+  if [ x"y" != x${option} ];then
+    exit 0
+  fi
+  mkdir -p ${torch_src_root}
+  git clone ${torch_repo} ${torch_src_root} --recursive
+fi
+
+# 2. config the directories
+torch_ccache_root=${torch_src_root}/torch-ccache
+
+if [ -z "${torch_build_dir}" ];then
+  torch_build_dir=${torch_src_root}/build
+fi
+torch_build_dir=$(realpath ${torch_build_dir})
+
+if [ -z "${torch_install_dir}" ];then
+  build_parent_dir=$(dirname "$torch_build_dir")
+  torch_install_dir=${build_parent_dir}/${build_type}
+fi
+torch_install_dir=$(realpath ${torch_install_dir})
+
+cat << EOF
+# ------------- torch-project build config -------------- #
+# script_dir             : ${script_dir}
+# torch_src_root         : ${torch_src_root}
+# torch_to_build"        : ${torch_to_build}
+# torch_build_dir        : ${torch_build_dir}
+# torch_build_type       : ${build_type}
+# torch_to_install"      : ${torch_to_install}
+# torch_install_dir      : ${torch_install_dir}
+# enable_ninja           : ${enable_ninja}
+# enable_ccache          : ${enable_ccache}
+# torch_ccache_root      : ${torch_ccache_root}
+# ccache_size            : ${ccache_size}
+# current dir            : `pwd`
+EOF
+
+# 3. set the torch build configs
+# ------------- build torch-project -------------- #"
+torch_build_args="\
+    -DCMAKE_INSTALL_PREFIX=${torch_install_dir} \
+    -DCMAKE_PREFIX_PATH=${torch_src_root} \
+    -DCMAKE_BUILD_TYPE=${build_type} \
+    -DCMAKE_CXX_STANDARD=17 \
+    -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+    -DUSE_CUDA=OFF \
+    -DUSE_CUDNN=OFF \
+    -DUSE_OPENCV=OFF \
+    -DBUILD_CAFFE2_MOBILE=OFF \
+    -DBUILD_PYTHON=OFF \
+    -DBUILD_CAFFE2_OPS=OFF \
+    -DBUILD_TEST=OFF \
+    -DUSE_TBB=OFF"
+
+cmake_exe=cmake
+make_exe=make
+command -v ninja >/dev/null 2>&1 && ${enable_ninja} && {
+    echo >&2 "try to build with ninja!"
+    cmake_exe="cmake -G Ninja"
+    make_exe=ninja
+}
+
+command -v ccache >/dev/null 2>&1 && ${enable_ccache} || {
+  echo "please install ccache beforehand!"
+  exit -1
+}
+
+echo "$cmake_exe ${torch_build_args} ${torch_src_root}"
+if [ x"false" == x"${build_force}" ];then
+    echo ""
+    read -p "try to build the torch project in ${torch_src_root} ... [y/n]" option
+    if [ x"y" != x${option} ];then
+        exit 0
+    fi
+fi
+# sleep 5
+
+if [ x"true" == x"${build_clean}" ];then
+  if [ -d "${torch_build_dir}" ];then
+    rm -rf ${torch_build_dir}
+  fi
+  if [ -d "${torch_install_dir}" ];then
+    rm -rf ${torch_install_dir}
+  fi
+fi
+
+if [ ! -d "${torch_build_dir}" ];then
+  mkdir -p ${torch_build_dir}
+fi
+cd ${torch_build_dir}
+
+# 4. build torch project
+${cmake_exe} ${torch_build_args} ${torch_src_root}
+if [ x"true" == x"${torch_to_build}" ];then
+  echo "${make_exe} -j${build_jobs}"
+  ${make_exe} -j${build_jobs}
+fi
+
+# 5. install torch project
+if [ x"true" == x"${torch_to_install}" ];then
+  echo "${make_exe} install"
+  ${make_exe} install
+fi
+
+timestamp_end=$(date +%Y-%m-%d_%H-%M-%S)
+echo "[${timestamp_begin}, ${timestamp_end}]"
+
+echo "~_~"
+echo "torch building complete ..."
