@@ -34,7 +34,6 @@ echo 'PATH=${CLI_ROOT}/spec:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/r2:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/git:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/armie:${PATH}' >> ~/.bashrc
-echo 'PATH=${CLI_ROOT}/gn:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/ninjatracing:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/binutil:${PATH}' >> ~/.bashrc
 echo 'PATH=${CLI_ROOT}/cmd:${PATH}' >> ~/.bashrc
@@ -46,7 +45,7 @@ echo '#-------------------  cli config end ------------------#' >> ~/.bashrc
 
 ${SCRIPT_DIR}/git/install.sh
 ${SCRIPT_DIR}/vim/install.sh
-
+${SCRIPT_DIR}/buildtools/install.sh
 ${SCRIPT_DIR}/server/install.sh
 ${SCRIPT_DIR}/compiler/install.sh
 ${SCRIPT_DIR}/xcode/install.sh
