@@ -54,6 +54,7 @@ ${SCRIPT_DIR}/docs/install.sh
 ${SCRIPT_DIR}/cmd/install.sh
 ${SCRIPT_DIR}/v8/install.sh
 ${SCRIPT_DIR}/torch/install.sh
+${SCRIPT_DIR}/riscv/install.sh
 
 echo "brew install bash-completion"
 echo '[[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ]] && . "/opt/homebrew/etc/profile.d/bash_completion.sh"' >> ~/.bashrc

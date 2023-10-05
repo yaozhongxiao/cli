@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+#
+# Copyright 2023 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+script_dir="$(cd "$(dirname "$0")"; pwd -P)"
+rdb_root=${script_dir}
+
+function usage() {
+    cat << EOF
+    Usage: $0 [options] app.elf
+    Options:
+      --cfg   openocd.cfg   set the cfg for connect rdbservser
+      -h|--help             show help
+EOF
+}
+
+elf_bin=""
+openocd_cfg=${rdb_root}/template/spike.cfg
+function options_parse() {
+    while test $# -gt 0; do
+        case "$1" in
+            --cfg)
+              if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                openocd_cfg=$2
+                shift
+              fi
+                ;;
+            -*)
+                ;;
+            *)
+                elf_bin=$1
+                ;;
+        esac
+        shift
+    done
+}
+
+# parse options
+echo $0 $@
+options_parse $@
+
+if [ -z "${elf_bin}" ];then
+  echo "please input your debugged elf !"
+  exit -1
+fi
+
+function get_pid() {
+  args="$1"
+  pid=$(ps aux | grep "$args" | grep -v grep | awk '{print $2}')
+  echo $pid
+}
+
+function sync_exec() {
+  cmd="$1"
+  echo "$cmd"
+  pid=$(get_pid ${cmd})
+  if [ ! -z "$pid" ];then
+    kill -9 ${pid}
+  fi
+  ${cmd} &
+  pid=$(get_pid ${cmd})
+  while [ -z "$pid" ] ;do
+      sleep 3
+      echo "wait ${cmd} complete!"
+      pid=$(get_pid "${cmd}")
+  done
+}
+
+function wait() {
+  cmd="$1"
+  pid=$(get_pid ${cmd})
+  while [ -z "$pid" ] ;do
+      echo "wait ${cmd} complete!"
+      pid=$(get_pid "${cmd}")
+  done
+}
+
+# 1. rdbserver will launch spike as following commands
+# sync_exec "spike --rbb-port=2048 -m0x10110000:0x20000 --pc=0x10110000 ${elf_bin}"
+echo "wait spike --rbb-port"
+wait "spike --rbb-port"
+
+# 2. openocd debugger adaptor
+sync_exec "openocd -f ${openocd_cfg}"
+
+# 3. launch gdb
+# exec gdb commant in .rdbinit, expecially "load" must be
+# required to load the elf file into debug context
+echo "riscv64-unknown-elf-gdb ${elf_bin} -x ${rdb_root}/template/.rdbinit"
+riscv64-unknown-elf-gdb ${elf_bin} -x ${rdb_root}/template/.rdbinit

@@ -13,3 +13,7 @@ The scripts to build and install target llvm & clang
 - The default build is based on cmake without ninja,
   if you want to build with ninja, you can set the
   ``` ENABLE_NINJA=true ``` in llvm-builder
+
+## riscv
+The scripts to install risc-v64 tools-chains and provide
+the riscv spike debugger.

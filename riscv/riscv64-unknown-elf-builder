@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+#
+# Copyright 2023 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+script_dir="$(cd "$(dirname "$0")"; pwd -P)"
+
+repo_url=git@github.com:riscv-collab/riscv-gnu-toolchain.git
+tar_url=https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2023.09.27/riscv64-elf-ubuntu-20.04-llvm-nightly-2023.09.27-nightly.tar.gz
+riscv_toolchain_tag=v1.0.0
+target_name=${repo_url##*/}
+target_name=${target_name%%\.*}
+
+riscv_target=riscv64-unknown-elf
+riscv_toolchain_root=`pwd`/${riscv_target}
+
+src_root=`pwd`/riscv-rools-src
+build_type=Release #Debug
+build_force=""
+build_clean="false"
+function usage() {
+    cat << EOF
+    Usage: $0 [options]
+    Options:
+    --prefix        [path]    Dest directory to install
+    -h|--help                 This Message.
+    -b|--build-type [debug |  Set build-type
+                     release]
+    -f|--force                Force build riscv-tools.
+    -c|--clean                Clean Temporary artifacts at first.
+EOF
+}
+
+function options_parse() {
+    while test $# -gt 0; do
+        case "$1" in
+            --prefix)
+              if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                riscv_toolchain_root=$2
+                shift
+              fi
+              ;;
+            -s|--src)
+              if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                src_root=$2
+                shift
+              fi
+              ;;
+            -b|--build-type)
+              if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                build_type=$2
+                shift
+              fi
+              ;;
+            -f|--force)
+                build_force=-f
+                ;;
+            -c|--clean)
+                build_clean=true
+                ;;
+            -*|-h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                build_target+=("$1")
+                ;;
+        esac
+        shift
+    done
+}
+
+# parse options
+echo $0 $@
+options_parse $@
+
+option=y
+riscv_tar_ball=$src_root/${riscv_target}.tar.gz
+if [ -d ${riscv_toolchain_root} ];then
+  if [ x"${build_force}" != x"-f" ];then
+    read -p "do you want to download riscv-toolchain into ${riscv_toolchain_root} [y/n]" option
+    if [ x"y" != x${option} ];then
+      usage
+      exit 0
+    fi
+  fi
+  rm -rf ${riscv_toolchain_root}
+fi
+if [ -f "${riscv_tar_ball}" ] && [ x"$build_clean" == x"true" ];then
+  echo "rm -rf ${riscv_tar_ball}"
+  rm -rf ${riscv_tar_ball} 
+fi
+
+if [ ! -f ${riscv_tar_ball} ];then
+  echo "wget ${tar_url} -O ${riscv_tar_ball}"
+  wget -cP ${src_root} ${tar_url} -O ${riscv_tar_ball}
+  # echo "git clone --branch ${riscv_toolchain_tag} ${repo_url} ${src_dir}"
+  # git clone --branch ${riscv_toolchain_tag} ${repo_url} ${src_dir}
+fi
+
+if [ ! -d ${riscv_toolchain_root} ];then
+  mkdir -p ${riscv_toolchain_root}
+fi
+tar -zxvf ${riscv_tar_ball} -C ${riscv_toolchain_root} --strip-components=1

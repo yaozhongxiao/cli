@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+rcc_root="$(cd "$(dirname "$0")"; pwd -P)"
+
+cxx=riscv64-unknown-elf-g++
+
+set -x
+$cxx -T ${rcc_root}/template/spike.lds -nostartfiles ${rcc_root}/template/start.S $@

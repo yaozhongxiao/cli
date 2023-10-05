@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+#
+# Copyright 2023 WorkGroup Participants. All rights reserved
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+script_dir="$(cd "$(dirname "$0")"; pwd -P)"
+xsed="sed -i"
+
+riscv_tools_root=`pwd`/riscv-tools
+tools_target=(
+  "riscv64-unknown-elf"
+  "spike"
+  "spike-pk"
+  "openocd"
+)
+
+declare -a build_target=()
+build_type=Release #Debug
+build_force=""
+build_clean=""
+function usage() {
+    cat << EOF
+    Usage: $0 [options] {spike|spike-pk|openocd}
+    Options:
+      --prefix        [path]    Dest directory to install
+      -h|--help                 This Message.
+      -b|--build-type [debug |  Set build-type
+                       release]
+      -f|--force                Force build riscv-tools.
+      -c|--clean                Clean Temporary artifacts at first.
+EOF
+}
+
+function options_parse() {
+    while test $# -gt 0; do
+        case "$1" in
+            --prefix)
+              if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                riscv_tools_root=$2
+                shift
+              fi
+              ;;
+            -b|--build-type)
+              if [[ ! -z $2 ]] && [[ $2 != -* ]];then
+                build_type=$2
+                shift
+              fi
+              ;;
+            -f|--force)
+                build_force=-f
+                ;;
+            -c|--clean)
+                build_clean="--clean"
+                ;;
+            -*|-h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                build_target+=("$1")
+                ;;
+        esac
+        shift
+    done
+}
+
+# parse options
+echo $0 $@
+options_parse $@
+
+riscv_tools_root=$(realpath ${riscv_tools_root})
+
+if [ ${#build_target[@]} -eq 0 ];then
+  build_target+=${tools_target[@]}
+fi
+
+# build all the riscv-tools
+for target in ${build_target[@]};do
+  echo "${script_dir}/${target}-builder --prefix ${riscv_tools_root}/${target} \
+        ${build_clean} ${build_force}\
+        -b ${build_type}"
+  ${script_dir}/${target}-builder --prefix ${riscv_tools_root}/${target} \
+    ${build_clean} ${build_force} \
+    -b ${build_type} \
+    -s ${riscv_tools_root}-src
+done
+
+# set the environment variable for riscv-tools
+cat << EOF > ${riscv_tools_root}/install.sh
+  #!/usr/bin/env bash
+
+  config_file=~/.bashrc
+  sed -i "/riscv-tools config begin/,/riscv-tools config end./ d" \$config_file
+  echo '#------------------- riscv-tools config begin ----------------#' >> \$config_file
+  echo "export RISCV_TOOLS_HOME=${riscv_tools_root}" >> \$config_file
+  echo 'export RISCV_SPIKE_HOME=\${RISCV_TOOLS_HOME}/spike' >> \$config_file
+  echo 'export RISCV_SPIKE_PK_HOME=\${RISCV_TOOLS_HOME}/spike-pk/riscv64-unknown-elf' >> \$config_file
+  echo 'export RISCV_OPENOCD_HOME=\${RISCV_TOOLS_HOME}/openocd' >> \$config_file
+  echo 'export RISCV_TOOLCHAIN=\${RISCV_TOOLS_HOME}/riscv64-unknown-elf' >> \$config_file
+  echo 'export RUNTIME_RISCV_TOOLCHAIN_PREFIX=\${RISCV_TOOLCHAIN}/bin/riscv64-unknown-elf-' >> \$config_file
+  echo 'export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\${RISCV_TOOLCHAIN}/lib' >> \$config_file
+  echo 'export PATH=\${PATH}:\${RISCV_TOOLCHAIN}/bin:\${RISCV_OPENOCD_HOME}/bin' >> \$config_file
+  echo 'export PATH=\${PATH}:\${RISCV_SPIKE_HOME}/bin:\${RISCV_SPIKE_PK_HOME}/bin' >> \$config_file
+  echo 'alias spike-pk="spike \${RISCV_SPIKE_PK_HOME}/bin/pk"' >> \$config_file
+  echo 'alias pk="\${RISCV_SPIKE_PK_HOME}/bin/pk"' >> \$config_file
+  echo '#------------------- riscv-tools config end ------------------#' >>\$config_file
+EOF
+chmod +x ${riscv_tools_root}/install.sh
+
+echo "~_~"
+echo "riscv-tools building complete ..."
