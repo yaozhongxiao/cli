@@ -20,10 +20,10 @@ xsed="sed -i"
 
 riscv_tools_root=`pwd`/riscv-tools
 tools_target=(
-  "riscv64-unknown-elf"
   "spike"
-  "spike-pk"
-  "openocd"
+  "riscv-pk"
+  "riscv-openocd"
+  "riscv64-unknown-elf-tools"
 )
 
 declare -a build_target=()
@@ -32,7 +32,7 @@ build_force=""
 build_clean=""
 function usage() {
     cat << EOF
-    Usage: $0 [options] {spike|spike-pk|openocd}
+    Usage: $0 [options] {spike|riscv-pk|riscv-openocd|riscv64-unknown-elf-tools}
     Options:
       --prefix        [path]    Dest directory to install
       -h|--help                 This Message.
@@ -106,9 +106,9 @@ cat << EOF > ${riscv_tools_root}/install.sh
   echo '#------------------- riscv-tools config begin ----------------#' >> \$config_file
   echo "export RISCV_TOOLS_HOME=${riscv_tools_root}" >> \$config_file
   echo 'export RISCV_SPIKE_HOME=\${RISCV_TOOLS_HOME}/spike' >> \$config_file
-  echo 'export RISCV_SPIKE_PK_HOME=\${RISCV_TOOLS_HOME}/spike-pk/riscv64-unknown-elf' >> \$config_file
-  echo 'export RISCV_OPENOCD_HOME=\${RISCV_TOOLS_HOME}/openocd' >> \$config_file
-  echo 'export RISCV_TOOLCHAIN=\${RISCV_TOOLS_HOME}/riscv64-unknown-elf' >> \$config_file
+  echo 'export RISCV_SPIKE_PK_HOME=\${RISCV_TOOLS_HOME}/riscv-pk/riscv64-unknown-elf' >> \$config_file
+  echo 'export RISCV_OPENOCD_HOME=\${RISCV_TOOLS_HOME}/riscv-openocd' >> \$config_file
+  echo 'export RISCV_TOOLCHAIN=\${RISCV_TOOLS_HOME}/riscv64-unknown-elf-tools' >> \$config_file
   echo 'export RUNTIME_RISCV_TOOLCHAIN_PREFIX=\${RISCV_TOOLCHAIN}/bin/riscv64-unknown-elf-' >> \$config_file
   echo 'export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\${RISCV_TOOLCHAIN}/lib' >> \$config_file
   echo 'export PATH=\${PATH}:\${RISCV_TOOLCHAIN}/bin:\${RISCV_OPENOCD_HOME}/bin' >> \$config_file
