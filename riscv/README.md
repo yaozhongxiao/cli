@@ -37,18 +37,18 @@ The detailed information refer to the following links:
 ### 1.2 risc-v compiler
 risc-v compiler will build the source code into risc-v executable binary which can execute in risc-v simulator spike(spike pk)
 
-#### 1.2.1 rcc
-rcc(risc-v c compiler) is a wrapper for riscv64-unknown-elf-gcc together with linker script and "start.s".
-rcc will help developer to easily build risc-v excutable from source with the following command.
+#### 1.2.1 rvcc
+rvcc(risc-v c compiler) is a wrapper for riscv64-unknown-elf-gcc together with linker script and "start.s".
+rvcc will help developer to easily build risc-v excutable from source with the following command.
 ```
-../rcc -g -Og sample.c -o sample
+../rvcc -g -Og sample.c -o sample
 
 ```
-#### r++
-r++(risc-v c++ compiler) is a wrapper for riscv64-unknown-elf-g++ together with linker script and "start.s".
-r++ will help developer to easily build risc-v excutable from source with the following command.
+#### rv++
+rv++(risc-v c++ compiler) is a wrapper for riscv64-unknown-elf-g++ together with linker script and "start.s".
+rv++ will help developer to easily build risc-v excutable from source with the following command.
 ```
-../r++ -g -Og sample.cc -o sample
+../rv++ -g -Og sample.cc -o sample
 
 ```
 
@@ -135,7 +135,7 @@ rdb is a wrapper for rdbserver and rdbclient. It will start the rdbserver for cl
 spike.cfg is the configure for openocd to connect with spike sim during debugging.
 
 ### spike.lds
-spike.lds is the linker script for rcc and r++
+spike.lds is the linker script for rvcc and rv++
 
 ### start.S
 start.S is the boottrap code for riscv executable

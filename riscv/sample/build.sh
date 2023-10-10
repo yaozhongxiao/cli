@@ -8,4 +8,4 @@ script_dir="$(cd "$(dirname "$0")"; pwd -P)"
 # riscv64-unknown-elf-gcc -g -Og -o start.o -c ${script_dir}/../template/start.S
 # riscv64-unknown-elf-gcc -T ${script_dir}/../template/spike.lds -nostartfiles -o sample sample.o start.o
 
-${script_dir}/../rcc -g -Og sample.c -o sample
+rvcc -g -Og sample.c -o sample
