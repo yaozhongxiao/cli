@@ -16,6 +16,7 @@
 
 set -e
 script_dir="$(cd "$(dirname "$0")"; pwd -P)"
+source ${script_dir}/../libfn
 
 py_version=$(python -V 2>&1|awk '{print $2}'| awk -F '.' '{print $1}')
 if (( py_version < 3 ));then
@@ -144,7 +145,7 @@ options_parse $@
 
 timestamp_begin=$(date +%Y-%m-%d_%H-%M-%S)
 
-torch_src_root=$(realpath ${torch_src_root})
+torch_src_root=$(abspath ${torch_src_root})
 # 1. check torch project availability 
 if [ ! -d "${torch_src_root}" ];then
   echo ""
@@ -163,13 +164,13 @@ torch_ccache_root=${torch_src_root}/torch-ccache
 if [ -z "${torch_build_dir}" ];then
   torch_build_dir=${torch_src_root}/build
 fi
-torch_build_dir=$(realpath ${torch_build_dir})
+torch_build_dir=$(abspath ${torch_build_dir})
 
 if [ -z "${torch_install_dir}" ];then
   build_parent_dir=$(dirname "$torch_build_dir")
   torch_install_dir=${build_parent_dir}/${build_type}
 fi
-torch_install_dir=$(realpath ${torch_install_dir})
+torch_install_dir=$(abspath ${torch_install_dir})
 
 cat << EOF
 # ------------- torch-project build config -------------- #
