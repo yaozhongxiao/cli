@@ -337,6 +337,8 @@ if filereadable(expand($HOME . '/.vimrc.local'))
     source $HOME/.vimrc.local
 endif
 
+set nofixeol
+
 " clang-format
 map <C-m> :py3f $VIM_ROOT/clang-format.py<cr>
 "imap <C-m> <c-o>:py3f $VIM_ROOT/clang-format.py<cr>

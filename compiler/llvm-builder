@@ -156,10 +156,10 @@ fi
 
 LLVM_OSX_ARCHITECTURES="arm64"
 
-LLVM_BUILD_TARGETS="AArch64;ARM;WebAssembly;X86;Mips;${LLVM_EXTRA_BUILD_TARGET}"
+LLVM_BUILD_TARGETS="AArch64;ARM;WebAssembly;X86;Mips;NVPTX;RISCV;${LLVM_EXTRA_BUILD_TARGET}"
 LLVM_BUILD_PROJECTS="clang;clang-tools-extra;lld;lldb;mlir"
-# LLVM_BUILD_RUNTIMES="libc;libunwind;libcxxabi;libcxx;compiler-rt"
-LLVM_BUILD_RUNTIMES="libunwind;libcxxabi;libcxx;compiler-rt"
+LLVM_BUILD_RUNTIMES="libc;libunwind;libcxxabi;libcxx;compiler-rt"
+# LLVM_BUILD_RUNTIMES="libunwind;libcxxabi;libcxx;compiler-rt"
 echo "# ------------- llvm-project build config -------------- #""
 echo "SCRIPT_DIR             : ${SCRIPT_DIR}"
 echo "BUILD_ROOT_DIR         : ${BUILD_ROOT_DIR}"
@@ -169,11 +169,11 @@ echo "ENABLE_NINJA           : ${ENABLE_NINJA}"
 echo "ENABLE_CCACHE          : ${ENABLE_CCACHE}"
 echo "CCACHE_DIR             : ${LLVM_CCACHE_ROOT}"
 echo "CCACHE_SIZE            : ${LLVM_CCACHE_SIZE}"
-echo "LLVM_TARGETS_TO_BUILD" : ${LLVM_BUILD_TARGETS}
-echo "LLVM_BUILD_PROJECTS"   : ${LLVM_BUILD_PROJECTS}
+echo "LLVM_TARGETS_TO_BUILD  : ${LLVM_BUILD_TARGETS}"
+echo "LLVM_BUILD_PROJECTS    : ${LLVM_BUILD_PROJECTS}"
 echo "current dir            : `pwd`"
-echo "LLVM_TO_BUILD"         : ${LLVM_TO_BUILD}
-echo "LLVM_TO_INSTALL"       : ${LLVM_TO_INSTALL}
+echo "LLVM_TO_BUILD          : ${LLVM_TO_BUILD}"
+echo "LLVM_TO_INSTALL        : ${LLVM_TO_INSTALL}"
 
 # ------------- build llvm-project -------------- #"
 LLVM_BUILD_ARGS="\
