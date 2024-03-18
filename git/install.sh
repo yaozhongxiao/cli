@@ -30,11 +30,13 @@ ln -s ${SCRIPT_DIR}/.git-completion.bash .git-completion.bash
 [ -f ~/.git-commit-template ] && rm -rf ~/.git-commit-template
 ln -s ${SCRIPT_DIR}/.git-commit-template  .git-commit-template
 
-$xsed "/git config begin/,/git config end./ d" ~/.bashrc
-echo '#------------------- git config begin ----------------#' >> ~/.bashrc
-echo 'source ~/.git-completion.bash' >> ~/.bashrc
-echo "alias gitc=\"git -c user.email='zhongxiao.yzx@gmail.com' commit --author='zhongxiao.yzx<zhongxiao.yzx@gmail.com>'\"" >> ~/.bashrc
-#echo "alias igit=\"git -c user.email='zhongxiao.yzx@gmail.com'\"" >> ~/.bashrc
-echo '#------------------- git config end ----------------#' >> ~/.bashrc
+bash_file=~/.bashrc
+$xsed "/git config begin/,/git config end./ d" ${bash_file}
+echo '#------------------- git config begin ----------------#' >> ${bash_file}
+echo 'source ~/.git-completion.bash' >> ${bash_file}
+echo "alias gitc=\"git -c user.email='zhongxiao.yzx@gmail.com' commit --author='zhongxiao.yzx<zhongxiao.yzx@gmail.com>'\"" >> ${bash_file}
+echo "alias repo-branch='repo forall -c \"echo Repository: \\\$REPO_PATH; git branch -r\"'">> ${bash_file}
+echo "alias repo-fetch='_f(){ repo forall -vc git fetch -v "\$1";};_f'">> ${bash_file}
+echo '#------------------- git config end ----------------#' >> ${bash_file}
 
 echo "git config install complete ! ..."
