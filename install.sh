@@ -18,11 +18,13 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 source ${SCRIPT_DIR}/env.sh
 
+CONFIG_ORIGIN=~/.bashrc_origin
 CONFIG_FILE=~/.bashrc
-if [ -f ${CONFIG_FILE} ];then
-  mv ${CONFIG_FILE} ${CONFIG_FILE}_bk
+if [ ! -f ${CONFIG_ORIGIN} ];then
+  mv ${CONFIG_FILE} ${CONFIG_ORIGIN}
 fi
 cp -rf ${SCRIPT_DIR}/.bashrc ${CONFIG_FILE}
+echo "source ${CONFIG_ORIGIN}" >> ~/.bashrc
 
 $xsed "/cli config begin/,/cli config end./ d" ~/.bashrc
 echo '#-------------------  cli config begin ----------------#' >> ~/.bashrc
