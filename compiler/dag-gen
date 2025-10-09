@@ -28,7 +28,7 @@ AllViewDags=("--view-dag-combine1-dags" \
              "--view-sunit-dags")
 
 ViewDags=()
-llc_bin="xllc"
+llc_bin="./llc"
 dag_src_file=""
 dag_filetype="asm"
 dag_march="x86"
