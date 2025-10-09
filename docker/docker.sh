@@ -90,7 +90,8 @@ function docker_run() {
     docker run -it \
       --name $conainer_name \
       --user "$(id -u):$(id -g)" \
-      -v $(realpath ~/).ssh:$(realpath ~/).ssh:ro \
+      -v ~/.ssh:/.ssh:ro \
+      -v ~/.gitconfig:/.gitconfig:ro \
       -v $work_dir:$work_dir \
       -w  $work_dir $docker_image_url
 }
